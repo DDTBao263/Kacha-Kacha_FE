@@ -117,7 +117,9 @@ span.flatpickr-weekday,
 }
 .flatpickr-day.inRange {
   @apply dark:!shadow-7;
-  box-shadow: -5px 0 0 #EFF4FB, 5px 0 0 #EFF4FB;
+  box-shadow:
+    -5px 0 0 #eff4fb,
+    5px 0 0 #eff4fb;
 }
 .flatpickr-day.inRange,
 .flatpickr-day.prevMonthDay.inRange,
@@ -204,10 +206,10 @@ span.flatpickr-weekday,
   background-size: 20px;
 }
 .custom-input-date-1::-webkit-calendar-picker-indicator {
-  background-image: url(./images/icon/icon-calendar.svg);
+  background-image: url(../images/icon/icon-calendar.svg);
 }
 .custom-input-date-2::-webkit-calendar-picker-indicator {
-  background-image: url(./images/icon/icon-arrow-down.svg);
+  background-image: url(../images/icon/icon-arrow-down.svg);
 }
 
 [x-cloak] {
