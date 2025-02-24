@@ -102,13 +102,28 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             </h3>
           </div>
           {/* <!-- Admin Group --> */}
+
           {/* <!-- Restaurant manager Group --> */}
           <div>
             <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
               RESTAURANT MANAGER
             </h3>
+
+            <ul className="mb-6 flex flex-col gap-1.5">
+              <li>
+                  <NavLink
+                    to="/restaurantdash"
+                    className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                      pathname.includes('restaurantdash') && 'bg-graydark dark:bg-meta-4'
+                    }`}
+                  >
+                    Dashboard For RM
+                  </NavLink>
+              </li>
+            </ul>
           </div>
           {/* <!-- Restaurant manager Group --> */}
+
           {/* <!-- Store Manager Group --> */}
           <div>
             <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
@@ -116,6 +131,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             </h3>
           </div>
           {/* <!-- Store Manager Group --> */}
+
           {/* <!-- Menu Group --> */}
           <div>
             <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
