@@ -1,13 +1,21 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
+import { Link, useNavigate } from 'react-router-dom';
+// import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
 
 const SignIn: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleSignIn = (event: React.FormEvent) => {
+    event.preventDefault();
+    // Logic xử lý đăng nhập ở đây
+    // Sau khi đăng nhập thành công, điều hướng tới trang dashboard
+    navigate('/');
+  };
   return (
     <>
-      <Breadcrumb pageName="Sign In" />
+      {/* <Breadcrumb pageName="Sign In" /> */}
 
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex flex-wrap items-center">
@@ -153,7 +161,7 @@ const SignIn: React.FC = () => {
                 Sign In to Kacha-Kacha System
               </h2>
 
-              <form>
+              <form onSubmit={handleSignIn}>
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Email
@@ -226,6 +234,7 @@ const SignIn: React.FC = () => {
                     value="Sign In"
                     className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
                   />
+                  <Link to="/"></Link>
                 </div>
 
                 <button className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50 dark:border-strokedark dark:bg-meta-4 dark:hover:bg-opacity-50">
