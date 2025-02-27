@@ -19,6 +19,7 @@ const Settings = lazy(() => import('../pages/Settings'));
 const Tables = lazy(() => import('../pages/Tables'));
 const Alerts = lazy(() => import('../pages/UiElements/Alerts'));
 const Buttons = lazy(() => import('../pages/UiElements/Buttons'));
+const Store = lazy(() => import('../pages/Store/Stores'));
 
 // Routes for authentication (Sign In & Sign Up)
 export const authRoutes: RouteObject[] = [
@@ -57,6 +58,7 @@ export const appRoutes: RouteObject[] = [
       { path: 'profile', element: <Profile /> },
       { path: 'ui/alerts', element: <Alerts /> },
       { path: 'ui/buttons', element: <Buttons /> },
+      { path: 'store', element: <Store/>}
     ],
   },
 ];
