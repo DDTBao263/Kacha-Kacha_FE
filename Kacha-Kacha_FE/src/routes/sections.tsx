@@ -3,7 +3,7 @@ import { RouteObject, Outlet } from 'react-router-dom';
 
 // Import Layouts
 import DefaultLayout from '../layout/DefaultLayout';
-import OutLayout from '../layout/OutLayout';
+import OutLayout from '../layout/AuthLayout';
 
 // Lazy load pages
 const SignIn = lazy(() => import('../pages/Authentication/SignIn'));
@@ -19,7 +19,9 @@ const Settings = lazy(() => import('../pages/Settings'));
 const Tables = lazy(() => import('../pages/Tables'));
 const Alerts = lazy(() => import('../pages/UiElements/Alerts'));
 const Buttons = lazy(() => import('../pages/UiElements/Buttons'));
+const AdminDashboard = lazy(() => import('../pages/Dashboard/AdminDashboard'));
 const Store = lazy(() => import('../pages/Store/Stores'));
+
 
 // Routes for authentication (Sign In & Sign Up)
 export const authRoutes: RouteObject[] = [
@@ -51,6 +53,7 @@ export const appRoutes: RouteObject[] = [
       { path: 'settings', element: <Settings /> },
       { path: 'tables', element: <Tables /> },
       { path: 'chart', element: <Chart /> },
+      { path: 'admindash', element: <AdminDashboard /> },
       { path: 'restaurantdash', element: <RestaurantDash /> },
       { path: 'calendar', element: <Calendar /> },
       { path: 'forms/form-elements', element: <FormElements /> },
