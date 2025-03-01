@@ -5,6 +5,7 @@ import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
 import { signInWithGoogle } from '../../config/firebase';
 
+
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
 
