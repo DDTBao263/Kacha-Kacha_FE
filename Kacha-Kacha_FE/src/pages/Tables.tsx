@@ -2,8 +2,16 @@ import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
 import TableOne from '../components/Tables/TableOne';
 import TableThree from '../components/Tables/TableThree';
 import TableTwo from '../components/Tables/TableTwo';
+import { useEffect } from 'react';
+import { userService } from '../services/user/index';
 
 const Tables = () => {
+  useEffect(() => {
+      userService.getAllUsers().then((res) => {
+        console.log(res.data);
+      });
+    }, []);
+    
   return (
     <>
       <Breadcrumb pageName="Tables" />
