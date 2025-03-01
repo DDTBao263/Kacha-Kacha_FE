@@ -2,8 +2,8 @@ import { lazy } from 'react';
 import { RouteObject, Outlet } from 'react-router-dom';
 
 // Import Layouts
-import DefaultLayout from '../layout/DefaultLayout';
-import OutLayout from '../layout/AuthLayout';
+import DefaultLayout from '../components/layout/DefaultLayout';
+import OutLayout from '../components/layout/AuthLayout';
 
 // Lazy load pages
 const SignIn = lazy(() => import('../pages/Authentication/SignIn'));
@@ -61,7 +61,7 @@ export const appRoutes: RouteObject[] = [
       { path: 'profile', element: <Profile /> },
       { path: 'ui/alerts', element: <Alerts /> },
       { path: 'ui/buttons', element: <Buttons /> },
-      { path: 'store', element: <Store/>}
+      { path: 'store', element: <Store /> }
     ],
   },
 ];
