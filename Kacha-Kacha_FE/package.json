@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "apexcharts": "^3.41.0",
-    "axios": "^1.8.1",
     "chart.js": "^4.4.7",
     "firebase": "^11.3.1",
     "flatpickr": "^4.6.13",
@@ -34,7 +33,6 @@
     "sweetalert2": "^11.17.2"
   },
   "devDependencies": {
-    "@types/axios": "^0.14.4",
     "@types/react": "^18.2.17",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",
