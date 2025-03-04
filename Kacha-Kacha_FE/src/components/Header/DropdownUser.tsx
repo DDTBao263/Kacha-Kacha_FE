@@ -1,10 +1,21 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ClickOutside from '../ClickOutside';
 import UserOne from '../../assets/images/user/user-01.png';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../config/firebase';
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    // Thực hiện logic logout nếu cần (clear token, xóa session...)
+    await signOut(auth);
+    localStorage.removeItem('idToken'); // Xóa token nếu dùng localStorage
+    setDropdownOpen(false);
+    setTimeout(() => navigate('auth/signin'), 100);
+  };
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
@@ -119,7 +130,10 @@ const DropdownUser = () => {
               </Link>
             </li>
           </ul>
-          <button className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+          >
             <svg
               className="fill-current"
               width="22"
