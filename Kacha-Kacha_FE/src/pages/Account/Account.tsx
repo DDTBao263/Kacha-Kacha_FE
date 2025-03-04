@@ -3,6 +3,15 @@ import { ACCOUNT } from '../../types/account';
 import { useState } from 'react';
 import { AddAccountDialog } from './NewAccount';
 import { Button } from '../../components/ui/button';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '../../components/ui/pagination';
 
 const Account = () => {
   const accountData: ACCOUNT[] = [
@@ -193,7 +202,6 @@ const Account = () => {
         </div>
       </div> */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-6">Account Management</h2>
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
             <input
@@ -436,6 +444,34 @@ const Account = () => {
             </tbody>
           </table>
         </div>
+        <Pagination className="mt-6">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious href="#" />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink
+                href="#"
+                isActive
+                className="border-2 border-gray-900"
+              >
+                1
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink href="#">2</PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink href="#">3</PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationEllipsis />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext href="#" />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
       <AddAccountDialog
         open={isAddDialogOpen}

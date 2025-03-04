@@ -1,19 +1,89 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 // import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import LogoDark from '../../assets/images/logo/logo-dark.svg';
 import Logo from '../../assets/images/logo/logo.svg';
-import { signInWithGoogle } from '../../config/firebase';
+import { auth, provider } from '../../config/firebase';
+import {
+  // getRedirectResult,
+  signInWithPopup,
+  // signInWithRedirect,
+} from 'firebase/auth';
+import { authService } from '../../services/authentication/auth';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleSignIn = (event: React.FormEvent) => {
-    event.preventDefault();
-    // Logic xử lý đăng nhập ở đây
-    // Sau khi đăng nhập thành công, điều hướng tới trang dashboard
-    navigate('/');
+  const handleSignIn = async () => {
+    // try {
+    //   await signInWithRedirect(auth, provider);
+    // } catch (error) {
+    //   console.error('Google sign-in error:', error);
+    // }
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log('User: ', user);
+      if (user) {
+        const idToken = await user.getIdToken();
+        localStorage.setItem('idToken', idToken);
+        console.log('idToken: ', idToken);
+        const response = await authService.loginWithFirebase(idToken);
+        console.log('Login successful: ', response);
+
+        // Lưu token vào localStorage
+        // localStorage.setItem('accessToken', response.token); // Đổi key theo backend trả về
+        // localStorage.setItem('user', JSON.stringify(response.user)); // Lưu thông tin user
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+    }
   };
+
+  // Gọi handleRedirectResult() khi component được render
+
+  // const handleRedirectResult = async () => {
+  //   try {
+  //     // Nếu đã có user từ trước thì không cần gọi getRedirectResult()
+  //     if (auth.currentUser) {
+  //       console.log('User already signed in:', auth.currentUser);
+  //       return;
+  //     }
+
+  //     const result = await getRedirectResult(auth);
+
+  //     if (!result || !result.user) {
+  //       console.log('No user after redirect. Retrying in 2s...');
+  //       setTimeout(async () => {
+  //         if (auth.currentUser) {
+  //           console.log('User found after delay:', auth.currentUser);
+  //           const idToken = await auth.currentUser.getIdToken();
+  //           localStorage.setItem('idToken', idToken);
+  //           const response = await authService.loginWithFirebase(idToken);
+  //           console.log('Login successful:', response);
+  //           navigate('/');
+  //         } else {
+  //           console.log('Still no user.');
+  //         }
+  //       }, 2000);
+  //     } else {
+  //       console.log('User after redirect:', result.user);
+  //       const idToken = await result.user.getIdToken();
+  //       localStorage.setItem('idToken', idToken);
+  //       const response = await authService.loginWithFirebase(idToken);
+  //       console.log('Login successful:', response);
+  //       navigate('/');
+  //     }
+  //   } catch (error) {
+  //     console.error('Google sign-in error:', error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   handleRedirectResult();
+  // }, []);
+
   return (
     <>
       {/* <Breadcrumb pageName="Sign In" /> */}
@@ -173,7 +243,7 @@ const SignIn: React.FC = () => {
                 </div>
               </form>
               <button
-                onClick={signInWithGoogle}
+                onClick={handleSignIn}
                 className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50 dark:border-strokedark dark:bg-meta-4 dark:hover:bg-opacity-50"
               >
                 <span>

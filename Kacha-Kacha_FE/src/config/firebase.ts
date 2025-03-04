@@ -4,7 +4,7 @@ import { getStorage, FirebaseStorage } from 'firebase/storage';
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
+  // signInWithPopup,
   Auth,
 } from 'firebase/auth';
 
@@ -29,14 +29,14 @@ const storage: FirebaseStorage = getStorage(app);
 const auth: Auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-const signInWithGoogle = () => {
-  signInWithPopup(auth, provider)
-    .then((result) => {
-      console.log(result);
-    })
-    .catch((error) => {
-      console.log(error.message);
-    });
-};
+// const signInWithGoogle = () => {
+//   signInWithPopup(auth, provider)
+//     .then((result) => {
+//       console.log(result);
+//     })
+//     .catch((error) => {
+//       console.log(error.message);
+//     });
+// };
 
-export { storage, auth, signInWithGoogle };
+export { storage, auth, provider };

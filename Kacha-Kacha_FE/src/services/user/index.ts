@@ -1,7 +1,7 @@
-import { axiosClient } from "../../config/axios"
+import { axiosClient } from '../../config/axios';
 
 export const userService = {
-    async getAllUsers() {
-        return axiosClient.get('/users');
-    }
-}
+  async getAllUsers() {
+    return axiosClient.get('/api/users');
+  },
+};
