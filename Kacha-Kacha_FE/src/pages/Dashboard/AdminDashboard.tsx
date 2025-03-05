@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import CardDataStats from '../../components/CardDataStats';
+import CardDataStats from '../../components/Card/CardDataStats';
 
 import ChartTwo from '../../components/Charts/ChartTwo';
-import TableOne from '../../components/Tables/TableOne';
 import DonutChart from '../../components/Charts/DonutChart';
 
 const AdminDashboard: React.FC = () => {
@@ -60,9 +59,6 @@ const AdminDashboard: React.FC = () => {
         {/* <ChartOne /> */}
         <ChartTwo />
         <DonutChart />
-        <div className="col-span-12 xl:col-span-12">
-          <TableOne />
-        </div>
         {/* <ChatCard /> */}
       </div>
     </>
