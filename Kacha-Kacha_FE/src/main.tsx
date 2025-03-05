@@ -6,6 +6,7 @@ import '../src/assets/css/style.css';
 import '../src/assets/css/satoshi.css';
 import 'jsvectormap/dist/css/jsvectormap.css';
 import 'flatpickr/dist/flatpickr.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

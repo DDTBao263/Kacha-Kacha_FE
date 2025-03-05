@@ -1,5 +1,5 @@
-import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
-import userThree from '../assets/images/user/user-03.png';
+import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
+
 
 const Settings = () => {
   return (
@@ -219,9 +219,9 @@ const Settings = () => {
               <div className="p-7">
                 <form action="#">
                   <div className="mb-4 flex items-center gap-3">
-                    <div className="h-14 w-14 rounded-full">
-                      <img src={userThree} alt="User" />
-                    </div>
+                    {/* <div className="h-14 w-14 rounded-full">
+                      <img src={} alt="User" />
+                    </div> */}
                     <div>
                       <span className="mb-1.5 text-black dark:text-white">
                         Edit your photo
