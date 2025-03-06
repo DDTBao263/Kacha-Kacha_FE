@@ -52,7 +52,7 @@ const Store = () => {
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        console.log(popupMode === 'add' ? 'Thêm nhà hàng:' : 'Cập nhật nhà hàng:', formData);
+        console.log(popupMode === 'add' ? 'Add Restaurant:' : 'Update Restaurant:', formData);
         closePopup();
     };
 
@@ -62,11 +62,12 @@ const Store = () => {
             <div className="flex justify-start gap-4">
                 <button
                     onClick={() => openPopup('add')}
-                    className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                    className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
                 >
                     <i className="fa-solid fa-plus"></i>
                     Add Restaurant
                 </button>
+
             </div>
             <div className="mt-3">
                 <TableStore onEdit={(data) => openPopup('update', data)} />
