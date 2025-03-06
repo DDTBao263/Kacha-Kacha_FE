@@ -30,6 +30,8 @@ const SignIn: React.FC = () => {
         console.log('idToken: ', idToken);
         const response = await authService.loginWithFirebase(idToken);
         console.log('Login successful: ', response);
+        const jwt_token = response.jwt_token;
+        localStorage.setItem('jwtToken', jwt_token);
 
         // Lưu token vào localStorage
         // localStorage.setItem('accessToken', response.token); // Đổi key theo backend trả về
@@ -232,7 +234,6 @@ const SignIn: React.FC = () => {
                 Sign In to Kacha-Kacha System
               </h2>
 
-             
               <button
                 onClick={handleSignIn}
                 className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50 dark:border-strokedark dark:bg-meta-4 dark:hover:bg-opacity-50"
