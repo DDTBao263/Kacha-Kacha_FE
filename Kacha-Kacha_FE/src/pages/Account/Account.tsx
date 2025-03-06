@@ -1,6 +1,6 @@
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { ACCOUNT } from '../../types/account';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AddAccountDialog } from './NewAccount';
 import { Button } from '../../components/ui/button';
 import {
@@ -12,59 +12,85 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '../../components/ui/pagination';
+import { EditAccountDialog } from './EditAccount';
+import { userService } from '../../services/user';
 
 const Account = () => {
-  const accountData: ACCOUNT[] = [
-    {
-      id: '1',
-      name: 'Doan Dang Thien Bao',
-      email: 'baoddtse171827@fpt.edu.vn',
-      role: 'Admin',
-      restaurantName: '-',
-      status: 'Active',
-      joinDate: 'Jan 13,2023',
-    },
-    {
-      id: '2',
-      name: 'Nguyen Chi Thanh',
-      email: 'baoddtse171827@fpt.edu.vn',
-      role: 'Restaurant Manager',
-      restaurantName: '-',
-      status: 'Active',
-      joinDate: 'Jan 13,2023',
-    },
-    {
-      id: '3',
-      name: 'Nguyen Trong Thien',
-      email: 'baoddtse171827@fpt.edu.vn',
-      role: 'Store Manager',
-      restaurantName: 'CN1',
-      status: 'Active',
-      joinDate: 'Jan 13,2023',
-    },
-    {
-      id: '4',
-      name: 'Huynh Minh Khoi',
-      email: 'baoddtse171827@fpt.edu.vn',
-      role: 'Admin',
-      restaurantName: 'CN1',
-      status: 'Inactive',
-      joinDate: 'Jan 13,2023',
-    },
-    {
-      id: '5',
-      name: 'Do Mau Thanh',
-      email: 'baoddtse171827@fpt.edu.vn',
-      role: 'Employee',
-      restaurantName: 'CN2',
-      status: 'Inactive',
-      joinDate: 'Jan 13,2023',
-    },
-  ];
-  const [accounts, setAccounts] = useState<ACCOUNT[]>(accountData);
+  // const accountData: ACCOUNT[] = [
+  //   {
+  //     id: '1',
+  //     name: 'Doan Dang Thien Bao',
+  //     email: 'baoddtse171827@fpt.edu.vn',
+  //     role: 'Admin',
+  //     restaurantName: '-',
+  //     status: 'Active',
+  //     joinDate: 'Jan 13,2023',
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'Nguyen Chi Thanh',
+  //     email: 'baoddtse171827@fpt.edu.vn',
+  //     role: 'Restaurant Manager',
+  //     restaurantName: '-',
+  //     status: 'Active',
+  //     joinDate: 'Jan 13,2023',
+  //   },
+  //   {
+  //     id: '3',
+  //     name: 'Nguyen Trong Thien',
+  //     email: 'baoddtse171827@fpt.edu.vn',
+  //     role: 'Store Manager',
+  //     restaurantName: 'CN1',
+  //     status: 'Active',
+  //     joinDate: 'Jan 13,2023',
+  //   },
+  //   {
+  //     id: '4',
+  //     name: 'Huynh Minh Khoi',
+  //     email: 'baoddtse171827@fpt.edu.vn',
+  //     role: 'Admin',
+  //     restaurantName: 'CN1',
+  //     status: 'Inactive',
+  //     joinDate: 'Jan 13,2023',
+  //   },
+  //   {
+  //     id: '5',
+  //     name: 'Do Mau Thanh',
+  //     email: 'baoddtse171827@fpt.edu.vn',
+  //     role: 'Employee',
+  //     restaurantName: 'CN2',
+  //     status: 'Inactive',
+  //     joinDate: 'Jan 13,2023',
+  //   },
+  // ];
+  const [accounts, setAccounts] = useState<ACCOUNT[]>([]);
   const [selectedOption, setSelectedOption] = useState<string>('');
   const [isOptionSelected, setIsOptionSelected] = useState<boolean>(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<ACCOUNT | null>(null);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const response = await userService.getAllUsers();
+        const users = response.data.data.map((user: any) => ({
+          id: user.userID,
+          name: `${user.lastName} ${user.firstName}`,
+          email: user.email,
+          role: user.role,
+          restaurantName: '-', // Assuming restaurantName is not available in the API response
+          status: 'Active', // Assuming status is not available in the API response
+          joinDate: 'Jan 13,2023', // Assuming joinDate is not available in the API response
+        }));
+        setAccounts(users);
+      } catch (error) {
+        console.error('Failed to fetch accounts:', error);
+      }
+    };
+
+    fetchAccounts();
+  }, []);
 
   const changeTextColor = () => {
     setIsOptionSelected(true);
@@ -82,6 +108,11 @@ const Account = () => {
 
     setAccounts([...accounts, account]);
     setIsAddDialogOpen(false);
+  };
+
+  const handleEditClick = (account: ACCOUNT) => {
+    setSelectedAccount(account);
+    setEditDialogOpen(true);
   };
   return (
     <>
@@ -394,7 +425,7 @@ const Account = () => {
               </tr>
             </thead>
             <tbody>
-              {accountData.map((account, key) => (
+              {accounts.map((account, key) => (
                 <tr className="border-b hover:bg-slate-50" key={key}>
                   <td className="py-4 px-4 text-slate-800">{account.name}</td>
                   <td className="py-4 px-4 text-slate-800">{account.email}</td>
@@ -419,7 +450,10 @@ const Account = () => {
                     {account.joinDate}
                   </td>
                   <td className="py-4 px-4 flex justify-center">
-                    <button className="hover:text-primary">
+                    <button
+                      onClick={() => handleEditClick(account)}
+                      className="hover:text-primary"
+                    >
                       <svg
                         className="fill-current"
                         width="18"
@@ -477,6 +511,15 @@ const Account = () => {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onAddAccount={handleAddAccount}
+      />
+      <EditAccountDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        account={selectedAccount} // Truyền tài khoản được chọn vào dialog
+        onSave={(updatedAccount) => {
+          console.log('Updated Account:', updatedAccount);
+          setEditDialogOpen(false);
+        }}
       />
     </>
   );
