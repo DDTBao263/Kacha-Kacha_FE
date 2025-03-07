@@ -16,13 +16,15 @@ const Account = lazy(() => import('../pages/Account/Account'));
 // RM
 const RestaurantDash = lazy(() => import('../pages/Dashboard/RestaurantDash'));
 const Employee = lazy(() => import('../pages/Employee/Employee'));
+const LeaveType = lazy(() => import('../pages/LeaveType/LeaveType'));
+const WorkShift = lazy(() => import('../pages/WorkShift/WorkShift'));
 const Reports = lazy(() => import('../pages/Report/Report'));
 
 // SM
 const StoreDash = lazy(() => import('../pages/Dashboard/StoreDash'));
 const Attendance = lazy(() => import('../pages/Attendance/Attendance'));
-const Leave = lazy(() => import('../pages/Leave/Leave'));
-const Shift = lazy(() => import('../pages/Shift/Shift'));
+const LeaveRequest = lazy(() => import('../pages/LeaveRequest/LeaveRequest'));
+const Schedule = lazy(() => import('../pages/Schedule/Schedule'));
 
 // Template
 const Profile = lazy(() => import('../pages/Profile/Profile'));
@@ -62,11 +64,13 @@ export const appRoutes: RouteObject[] = [
       // RM
       { path: 'restaurantdash', element: <RestaurantDash /> },
       { path: 'employee', element: <Employee /> },
+      { path: 'leavetype', element: <LeaveType /> },
+      { path: 'workshift', element: <WorkShift /> },
       { path: 'reports', element: <Reports /> },
       // SM
       { path: 'storedash', element: <StoreDash /> },
-      { path: 'leave', element: <Leave /> },
-      { path: 'shift', element: <Shift /> },
+      { path: 'leaverequest', element: <LeaveRequest /> },
+      { path: 'schedule', element:  <Schedule /> },
       { path: 'attendance', element: <Attendance /> },
 
       //TEAMPLATE

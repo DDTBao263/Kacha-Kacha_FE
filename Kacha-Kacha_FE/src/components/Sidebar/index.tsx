@@ -166,6 +166,26 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               </li>
               <li>
                 <NavLink
+                  to="/leavetype"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('leavetype') && 'bg-graydark dark:bg-meta-4'
+                  }`}
+                >
+                  Leave Type
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/workshift"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('workshift') && 'bg-graydark dark:bg-meta-4'
+                  }`}
+                >
+                  Workshift
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
                   to="/reports"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes('reports') && 'bg-graydark dark:bg-meta-4'
@@ -206,22 +226,22 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               </li>
               <li>
                 <NavLink
-                  to="/leave"
+                  to="/leaverequest"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes('leave') && 'bg-graydark dark:bg-meta-4'
+                    pathname.includes('leaverequest') && 'bg-graydark dark:bg-meta-4'
                   }`}
                 >
-                  Leave
+                  Leave Request
                 </NavLink>
               </li>
               <li>
                 <NavLink
-                  to="/shift"
+                  to="/schedule"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes('shift') && 'bg-graydark dark:bg-meta-4'
+                    pathname.includes('schedule') && 'bg-graydark dark:bg-meta-4'
                   }`}
                 >
-                  Shift
+                  Schedule
                 </NavLink>
               </li>
             </ul>

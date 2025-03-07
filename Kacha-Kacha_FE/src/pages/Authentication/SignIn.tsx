@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import LogoDark from '../../assets/images/logo/logo-dark.svg';
 import Logo from '../../assets/images/logo/logo.svg';
 import { auth, provider } from '../../config/firebase';
+import { jwtDecode } from 'jwt-decode';
 import {
   // getRedirectResult,
   signInWithPopup,
@@ -13,6 +14,12 @@ import { authService } from '../../services/authentication/auth';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
+
+  const checkTokenExpiration = (token: string) => {
+    const decodedToken: any = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    return decodedToken.exp < currentTime;
+  };
 
   const handleSignIn = async () => {
     // try {
@@ -32,7 +39,8 @@ const SignIn: React.FC = () => {
         console.log('Login successful: ', response);
         const jwt_token = response.jwt_token;
         localStorage.setItem('jwtToken', jwt_token);
-
+        const decodedToken = jwtDecode(jwt_token);
+        console.log('Decoded Token: ', decodedToken);
         // Lưu token vào localStorage
         // localStorage.setItem('accessToken', response.token); // Đổi key theo backend trả về
         // localStorage.setItem('user', JSON.stringify(response.user)); // Lưu thông tin user
@@ -42,6 +50,14 @@ const SignIn: React.FC = () => {
       console.error('Google sign-in error:', error);
     }
   };
+
+  useEffect(() => {
+    const jwtToken = localStorage.getItem('jwtToken');
+    if (jwtToken && checkTokenExpiration(jwtToken)) {
+      console.log('JWT token expired. Please sign in again.');
+      handleSignIn();
+    }
+  }, []);
 
   // Gọi handleRedirectResult() khi component được render
 
