@@ -3,7 +3,9 @@ import { axiosClient } from '../../config/axios';
 export const authService = {
   loginWithFirebase: async (idToken: string) => {
     try {
-      const response = await axiosClient.post('/login/google', { idToken });
+      const response = await axiosClient.post(
+        `/login/firebase?firebaseToken=${encodeURIComponent(idToken)}`,
+      );
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
