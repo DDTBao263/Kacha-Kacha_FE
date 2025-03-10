@@ -1,5 +1,4 @@
 export type ACCOUNT = {
-  id: string;
   name: string;
   email: string;
   role: string;

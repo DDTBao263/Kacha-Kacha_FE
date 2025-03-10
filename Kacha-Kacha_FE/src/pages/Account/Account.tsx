@@ -16,93 +16,57 @@ import { EditAccountDialog } from './EditAccount';
 import { userService } from '../../services/user';
 
 const Account = () => {
-  // const accountData: ACCOUNT[] = [
-  //   {
-  //     id: '1',
-  //     name: 'Doan Dang Thien Bao',
-  //     email: 'baoddtse171827@fpt.edu.vn',
-  //     role: 'Admin',
-  //     restaurantName: '-',
-  //     status: 'Active',
-  //     joinDate: 'Jan 13,2023',
-  //   },
-  //   {
-  //     id: '2',
-  //     name: 'Nguyen Chi Thanh',
-  //     email: 'baoddtse171827@fpt.edu.vn',
-  //     role: 'Restaurant Manager',
-  //     restaurantName: '-',
-  //     status: 'Active',
-  //     joinDate: 'Jan 13,2023',
-  //   },
-  //   {
-  //     id: '3',
-  //     name: 'Nguyen Trong Thien',
-  //     email: 'baoddtse171827@fpt.edu.vn',
-  //     role: 'Store Manager',
-  //     restaurantName: 'CN1',
-  //     status: 'Active',
-  //     joinDate: 'Jan 13,2023',
-  //   },
-  //   {
-  //     id: '4',
-  //     name: 'Huynh Minh Khoi',
-  //     email: 'baoddtse171827@fpt.edu.vn',
-  //     role: 'Admin',
-  //     restaurantName: 'CN1',
-  //     status: 'Inactive',
-  //     joinDate: 'Jan 13,2023',
-  //   },
-  //   {
-  //     id: '5',
-  //     name: 'Do Mau Thanh',
-  //     email: 'baoddtse171827@fpt.edu.vn',
-  //     role: 'Employee',
-  //     restaurantName: 'CN2',
-  //     status: 'Inactive',
-  //     joinDate: 'Jan 13,2023',
-  //   },
-  // ];
   const [accounts, setAccounts] = useState<ACCOUNT[]>([]);
   const [selectedOption, setSelectedOption] = useState<string>('');
   const [isOptionSelected, setIsOptionSelected] = useState<boolean>(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<ACCOUNT | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const response = await userService.getAllUsers();
-        const users = response.data.data.map((user: any) => ({
-          id: user.userID,
-          name: `${user.lastName} ${user.firstName}`,
-          email: user.email,
-          role: user.role,
-          restaurantName: '-', // Assuming restaurantName is not available in the API response
-          status: 'Active', // Assuming status is not available in the API response
-          joinDate: 'Jan 13,2023', // Assuming joinDate is not available in the API response
-        }));
-        setAccounts(users);
-      } catch (error) {
-        console.error('Failed to fetch accounts:', error);
-      }
-    };
+    fetchAccounts(currentPage);
+  }, [currentPage]);
 
-    fetchAccounts();
-  }, []);
+  const fetchAccounts = async (page: number) => {
+    try {
+      const response = await userService.getAllUsers(page);
+      const users = response.data.data.map((user: any) => ({
+        id: user.userID,
+        name: `${user.lastName} ${user.firstName}`,
+        email: user.email,
+        role: user.role,
+        restaurantName: '-', // Assuming restaurantName is not available in the API response
+        status: user.status, // Assuming status is not available in the API response
+        joinDate: user.createdAt, // Assuming joinDate is not available in the API response
+      }));
+      setAccounts(users);
+      setTotalPages(response.data.totalPages); // Assuming totalPages is available in the API response
+    } catch (error) {
+      console.error('Failed to fetch accounts:', error);
+    }
+  };
 
   const changeTextColor = () => {
     setIsOptionSelected(true);
   };
 
-  const handleAddAccount = (newAccount: Omit<ACCOUNT, 'id' | 'joinDate'>) => {
+  const handleAddAccount = (newAccount: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: string;
+  }) => {
     const today = new Date();
     const formattedDate = `Jan ${today.getDate()},${today.getFullYear()}`;
 
     const account: ACCOUNT = {
-      ...newAccount,
-      id: (accounts.length + 1).toString(),
+      name: `${newAccount.firstName} ${newAccount.lastName}`, // Ghép tên
+      email: newAccount.email,
+      role: newAccount.role,
+      restaurantName: 'Default Restaurant', // Giá trị mặc định nếu cần
+      status: 'Active', // Giá trị mặc định nếu cần
       joinDate: formattedDate,
     };
 
@@ -114,124 +78,13 @@ const Account = () => {
     setSelectedAccount(account);
     setEditDialogOpen(true);
   };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
   return (
     <>
       <Breadcrumb pageName="Account" />
-
-      {/* <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
-        <h4 className="mb-6 text-xl font-semibold text-black dark:text-white">
-          Account List
-        </h4>
-
-        <div className="flex flex-col">
-          <div className="grid grid-cols-3 sm:grid-cols-7 rounded-sm bg-gray-2 dark:bg-meta-4">
-            <div className="p-2.5 xl:p-5 text-start">
-              <h5 className="text-sm font-medium uppercase xsm:text-base">
-                Name
-              </h5>
-            </div>
-            <div className="p-2.5 xl:p-5 text-start">
-              <h5 className="text-sm font-medium uppercase xsm:text-base">
-                Email
-              </h5>
-            </div>
-            <div className="p-2.5 text-center xl:p-5">
-              <h5 className="text-sm font-medium uppercase xsm:text-base">
-                Position
-              </h5>
-            </div>
-            <div className="p-2.5 text-center xl:p-5">
-              <h5 className="text-sm font-medium uppercase xsm:text-base">
-                Restaurant
-              </h5>
-            </div>
-            <div className="hidden p-2.5 text-center sm:block xl:p-5">
-              <h5 className="text-sm font-medium uppercase xsm:text-base">
-                Status
-              </h5>
-            </div>
-            <div className="hidden p-2.5 text-center sm:block xl:p-5">
-              <h5 className="text-sm font-medium uppercase xsm:text-base">
-                Join Date
-              </h5>
-            </div>
-            <div className="hidden p-2.5 text-center sm:block xl:p-5">
-              <h5 className="text-sm font-medium uppercase xsm:text-base">
-                Action
-              </h5>
-            </div>
-          </div>
-
-          {accountData.map((account, key) => (
-            <div
-              className={`grid grid-cols-3 sm:grid-cols-7 ${
-                key === accountData.length - 1
-                  ? ''
-                  : 'border-b border-stroke dark:border-strokedark'
-              }`}
-              key={key}
-            >
-              <div className="flex items-center gap-3 p-2.5 xl:p-5">
-                <p className="hidden text-black dark:text-white sm:block">
-                  {account.name}
-                </p>
-              </div>
-              <div className="flex items-center justify-start gap-3 p-2.5 xl:p-5">
-                <p className="hidden text-black dark:text-white sm:block">
-                  {account.email}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-center p-2.5 xl:p-5">
-                <p className="text-black dark:text-white">{account.role}</p>
-              </div>
-
-              <div className="flex items-center justify-center p-2.5 xl:p-5">
-                <p className="text-meta-3">{account.restaurantName}</p>
-              </div>
-
-              <div className="hidden items-center justify-center p-2.5 sm:flex xl:p-5">
-                <p
-                  className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-                    account.status === 'Active'
-                      ? 'bg-success text-success'
-                      : account.status === 'Inactive'
-                      ? 'bg-danger text-danger'
-                      : 'bg-warning text-warning'
-                  }`}
-                >
-                  {account.status}
-                </p>
-              </div>
-
-              <div className="hidden items-center justify-center p-2.5 sm:flex xl:p-5">
-                <p className="text-black dark:text-white">{account.joinDate}</p>
-              </div>
-              <div className="hidden items-center justify-center p-2.5 sm:flex xl:p-5">
-                <button className="hover:text-primary">
-                  <svg
-                    className="fill-current"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 18 18"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M8.99981 14.8219C3.43106 14.8219 0.674805 9.50624 0.562305 9.28124C0.47793 9.11249 0.47793 8.88749 0.562305 8.71874C0.674805 8.49374 3.43106 3.20624 8.99981 3.20624C14.5686 3.20624 17.3248 8.49374 17.4373 8.71874C17.5217 8.88749 17.5217 9.11249 17.4373 9.28124C17.3248 9.50624 14.5686 14.8219 8.99981 14.8219ZM1.85605 8.99999C2.4748 10.0406 4.89356 13.5562 8.99981 13.5562C13.1061 13.5562 15.5248 10.0406 16.1436 8.99999C15.5248 7.95936 13.1061 4.44374 8.99981 4.44374C4.89356 4.44374 2.4748 7.95936 1.85605 8.99999Z"
-                      fill=""
-                    />
-                    <path
-                      d="M9 11.3906C7.67812 11.3906 6.60938 10.3219 6.60938 9C6.60938 7.67813 7.67812 6.60938 9 6.60938C10.3219 6.60938 11.3906 7.67813 11.3906 9C11.3906 10.3219 10.3219 11.3906 9 11.3906ZM9 7.875C8.38125 7.875 7.875 8.38125 7.875 9C7.875 9.61875 8.38125 10.125 9 10.125C9.61875 10.125 10.125 9.61875 10.125 9C10.125 8.38125 9.61875 7.875 9 7.875Z"
-                      fill=""
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div> */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
@@ -436,9 +289,9 @@ const Account = () => {
                   <td className="py-4 px-4">
                     <p
                       className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-                        account.status === 'Active'
+                        account.status === 'ACTIVE'
                           ? 'bg-success text-success'
-                          : account.status === 'Inactive'
+                          : account.status === 'INACTIVE'
                           ? 'bg-danger text-danger'
                           : 'bg-warning text-warning'
                       }`}
@@ -481,28 +334,29 @@ const Account = () => {
         <Pagination className="mt-6">
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink
+              <PaginationPrevious
                 href="#"
-                isActive
-                className="border-2 border-gray-900"
-              >
-                1
-              </PaginationLink>
+                onClick={() => handlePageChange(currentPage - 1)}
+                // disabled={currentPage === 1}
+              />
             </PaginationItem>
+            {[...Array(totalPages)].map((_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  href="#"
+                  isActive={index + 1 === currentPage}
+                  onClick={() => handlePageChange(index + 1)}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
             <PaginationItem>
-              <PaginationLink href="#">2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
+              <PaginationNext
+                href="#"
+                onClick={() => handlePageChange(currentPage + 1)}
+                // disabled={currentPage === totalPages}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>

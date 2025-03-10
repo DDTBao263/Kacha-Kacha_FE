@@ -14,24 +14,23 @@ import {
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from '../../components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import { userService } from '../../services/user';
 
 interface AddAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddAccount: (account: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     role: string;
-    restaurantName: string;
-    status: string;
-    joinDate: string;
   }) => void;
 }
 
@@ -40,32 +39,45 @@ export function AddAccountDialog({
   onOpenChange,
   onAddAccount,
 }: AddAccountDialogProps) {
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
-  const [restaurantName, setRestaurantName] = useState('-');
+  const [loading, setLoading] = useState(false); // ✅ Thêm loading state
+  const [error, setError] = useState<string | null>(null); // ✅ Xử lý lỗi
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !email || !role) {
+    if (!firstName || !lastName || !email || !role) {
+      setError('Please fill in all fields.');
       return;
     }
 
-    onAddAccount({
-      name,
+    setLoading(true);
+    setError(null);
+
+    const newUser = {
+      firstName,
+      lastName,
       email,
       role,
-      restaurantName,
-      status: 'Active', // New accounts are active by default
-      joinDate: new Date().toISOString(),
-    });
+    };
 
-    // Reset form
-    setName('');
-    setEmail('');
-    setRole('');
-    setRestaurantName('-');
+    try {
+      await userService.addUser(newUser);
+      onAddAccount(newUser);
+      onOpenChange(false); // ✅ Đóng dialog sau khi thêm thành công
+      setFirstName('');
+      setLastName('');
+      setEmail('');
+      setRole('');
+    } catch (error) {
+      setError('Failed to add user. Please try again.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,12 +93,23 @@ export function AddAccountDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="firstName">First Name</Label>
             <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter full name"
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Enter first name"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter last name"
               required
             />
           </div>
@@ -103,46 +126,34 @@ export function AddAccountDialog({
             />
           </div>
 
-          {/* <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="position">Position</Label>
             <Select value={role} onValueChange={setRole} required>
               <SelectTrigger id="position">
                 <SelectValue placeholder="Select position" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Admin">Admin</SelectItem>
+                <SelectItem value="Admin">ADMIN</SelectItem>
                 <SelectItem value="Restaurant Manager">
-                  Restaurant Manager
+                  RESTAURANT_MANAGER
                 </SelectItem>
-                <SelectItem value="Store Manager">Store Manager</SelectItem>
-                <SelectItem value="Employee">Employee</SelectItem>
+                <SelectItem value="Draft">DRAFT</SelectItem>
               </SelectContent>
             </Select>
-          </div> */}
-
-          {/* <div className="space-y-2">
-            <Label htmlFor="restaurant">Restaurant (Optional)</Label>
-            <Select value={restaurantName} onValueChange={setRestaurantName}>
-              <SelectTrigger id="restaurant">
-                <SelectValue placeholder="Select restaurant" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="-">None</SelectItem>
-                <SelectItem value="CN1">CN1</SelectItem>
-                <SelectItem value="CN2">CN2</SelectItem>
-              </SelectContent>
-            </Select>
-          </div> */}
+          </div>
 
           <DialogFooter className="pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={loading}
             >
               Cancel
             </Button>
-            <Button type="submit">Add Account</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Adding...' : 'Add Account'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
