@@ -1,9 +1,9 @@
 import { axiosPrivate } from '../../config/axios';
 
 export const userService = {
-  getAllUsers: async (page: number) => {
+  getAllUsers: async (page: number, size: number) => {
     const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.get(`/api/users?page=${page}`, {
+    return axiosPrivate.get(`/api/users?page=${page}&size=${size}`, {
       headers: {
         Authorization: `Bearer ${jwt_Token}`,
       },
@@ -17,6 +17,7 @@ export const userService = {
     role: string;
   }) => {
     const jwt_Token = localStorage.getItem('jwtToken');
+    console.log(newUser);
     return axiosPrivate.post('/api/users', newUser, {
       headers: {
         Authorization: `Bearer ${jwt_Token}`,

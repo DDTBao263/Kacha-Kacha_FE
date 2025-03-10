@@ -6,7 +6,6 @@ import { Button } from '../../components/ui/button';
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -26,23 +25,25 @@ const Account = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetchAccounts(currentPage);
+    fetchAccounts(currentPage, 10);
   }, [currentPage]);
 
-  const fetchAccounts = async (page: number) => {
+  const fetchAccounts = async (page: number, size: number = 10) => {
     try {
-      const response = await userService.getAllUsers(page);
-      const users = response.data.data.map((user: any) => ({
-        id: user.userID,
-        name: `${user.lastName} ${user.firstName}`,
-        email: user.email,
-        role: user.role,
-        restaurantName: '-', // Assuming restaurantName is not available in the API response
-        status: user.status, // Assuming status is not available in the API response
-        joinDate: user.createdAt, // Assuming joinDate is not available in the API response
-      }));
+      const response = await userService.getAllUsers(page - 1, size);
+      const users =
+        response.data.data.content?.map((user: any) => ({
+          id: user.userID,
+          name: `${user.lastName} ${user.firstName}`,
+          email: user.email,
+          role: user.role,
+          restaurantName: '-', // Assuming restaurantName is not available in the API response
+          status: user.status, // Assuming status is not available in the API response
+          joinDate: user.createdAt, // Assuming joinDate is not available in the API response
+        })) || [];
       setAccounts(users);
-      setTotalPages(response.data.totalPages); // Assuming totalPages is available in the API response
+      const total = response.data.data.totalPages || 1;
+      setTotalPages(total); // Assuming totalPages is available in the API response
     } catch (error) {
       console.error('Failed to fetch accounts:', error);
     }
@@ -337,7 +338,7 @@ const Account = () => {
               <PaginationPrevious
                 href="#"
                 onClick={() => handlePageChange(currentPage - 1)}
-                // disabled={currentPage === 1}
+                isDisabled={currentPage === 1}
               />
             </PaginationItem>
             {[...Array(totalPages)].map((_, index) => (
@@ -355,7 +356,7 @@ const Account = () => {
               <PaginationNext
                 href="#"
                 onClick={() => handlePageChange(currentPage + 1)}
-                // disabled={currentPage === totalPages}
+                isDisabled={currentPage === totalPages}
               />
             </PaginationItem>
           </PaginationContent>
