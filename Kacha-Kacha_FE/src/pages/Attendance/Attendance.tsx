@@ -51,12 +51,6 @@ export default function AttendancePage() {
   const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage)
   const paginatedAttendance = filteredAttendance.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
-  // Calculate summary statistics
-  const presentCount = extendedAttendanceData.filter((record) => record.status === "Present").length
-  const absentCount = extendedAttendanceData.filter((record) => record.status === "Absent").length
-  const lateCount = extendedAttendanceData.filter((record) => record.status === "Late").length
-  const totalEmployees = extendedAttendanceData.length
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -76,48 +70,8 @@ export default function AttendancePage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Present</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <UserCheck className="mr-2 h-4 w-4 text-green-500" />
-              <div className="text-2xl font-bold">{presentCount}</div>
-              <div className="ml-2 text-sm text-muted-foreground">/ {totalEmployees}</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Absent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <UserX className="mr-2 h-4 w-4 text-red-500" />
-              <div className="text-2xl font-bold">{absentCount}</div>
-              <div className="ml-2 text-sm text-muted-foreground">/ {totalEmployees}</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Late Arrivals</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <Clock className="mr-2 h-4 w-4 text-amber-500" />
-              <div className="text-2xl font-bold">{lateCount}</div>
-              <div className="ml-2 text-sm text-muted-foreground">employees</div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Card>
         <CardHeader>
-          <CardTitle>Attendance Records</CardTitle>
           <CardDescription>Employee attendance for today - XXXXXX</CardDescription>
         </CardHeader>
         <CardContent>

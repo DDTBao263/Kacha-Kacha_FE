@@ -60,10 +60,6 @@ export default function Settings() {
                     <span className="text-sm">123 Main St, Anytown, CA 12345</span>
                   </div>
                 </div>
-
-                <Button size="sm" variant="outline" className="mt-2">
-                  Edit Profile
-                </Button>
               </div>
             </div>
           </CardContent>
