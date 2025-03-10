@@ -1,311 +1,760 @@
-import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
+import { Badge } from "../../components/ui/badge"
+import { Button } from "../../components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { CalendarDays, Clock, MapPin, Phone, User } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog"
 
-
-const Settings = () => {
+export default function Settings() {
   return (
-    <>
-      <div className="mx-auto max-w-270">
-        <Breadcrumb pageName="Settings" />
+    <div className="container mx-auto py-6 space-y-8">
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* User Profile Card */}
+        <Card className="flex-1">
+          <CardHeader>
+            <CardTitle>User Profile</CardTitle>
+            <CardDescription>Your personal information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              <Avatar className="w-24 h-24 border">
+                <AvatarImage src="/placeholder.svg?height=96&width=96" alt="User avatar" />
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+              <div className="space-y-4 flex-1">
+                <div>
+                  <h3 className="text-2xl font-bold">John Doe</h3>
+                  <p className="text-muted-foreground">Software Engineer</p>
+                </div>
 
-        <div className="grid grid-cols-5 gap-8">
-          <div className="col-span-5 xl:col-span-3">
-            <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-              <div className="border-b border-stroke py-4 px-7 dark:border-strokedark">
-                <h3 className="font-medium text-black dark:text-white">
-                  Personal Information
-                </h3>
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs py-0 px-2">
+                      <User className="h-3 w-3 mr-1" />
+                      Email
+                    </Badge>
+                    <span className="text-sm">john.doe@company.com</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs py-0 px-2">
+                      <Phone className="h-3 w-3 mr-1" />
+                      Phone
+                    </Badge>
+                    <span className="text-sm">+1 (555) 123-4567</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs py-0 px-2">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      Address
+                    </Badge>
+                    <span className="text-sm">123 Main St, Anytown, CA 12345</span>
+                  </div>
+                </div>
+
+                <Button size="sm" variant="outline" className="mt-2">
+                  Edit Profile
+                </Button>
               </div>
-              <div className="p-7">
-                <form action="#">
-                  <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
-                    <div className="w-full sm:w-1/2">
-                      <label
-                        className="mb-3 block text-sm font-medium text-black dark:text-white"
-                        htmlFor="fullName"
-                      >
-                        Full Name
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-4.5 top-4">
-                          <svg
-                            className="fill-current"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Working Time Statistics */}
+        <Card className="flex-1">
+          <CardHeader>
+            <CardTitle>Working Time Statistics</CardTitle>
+            <CardDescription>Your current working time metrics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium flex items-center">
+                    <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                    Today
+                  </span>
+                  <span className="font-bold">7h 15m</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div className="bg-primary h-full rounded-full" style={{ width: "90%" }}></div>
+                </div>
+                <div className="text-xs text-muted-foreground">90% of daily target (8h 00m)</div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium flex items-center">
+                    <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                    This Week
+                  </span>
+                  <span className="font-bold">32h 45m</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div className="bg-primary h-full rounded-full" style={{ width: "82%" }}></div>
+                </div>
+                <div className="text-xs text-muted-foreground">82% of weekly target (40h 00m)</div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium flex items-center">
+                    <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                    This Month
+                  </span>
+                  <span className="font-bold">142h 30m</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div className="bg-primary h-full rounded-full" style={{ width: "85%" }}></div>
+                </div>
+                <div className="text-xs text-muted-foreground">85% of monthly target (168h 00m)</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs for History and Schedule */}
+      <Tabs defaultValue="absence" className="w-full">
+        <TabsList className="grid grid-cols-4 w-full md:w-auto">
+          <TabsTrigger value="absence">Absence Stats</TabsTrigger>
+          <TabsTrigger value="timekeeping">Timekeeping</TabsTrigger>
+          <TabsTrigger value="leave">Leave Requests</TabsTrigger>
+          <TabsTrigger value="schedule">Work Schedule</TabsTrigger>
+        </TabsList>
+
+        {/* Absence Statistics */}
+        <TabsContent value="absence">
+          <Card>
+            <CardHeader>
+              <CardTitle>Absence & Attendance Statistics</CardTitle>
+              <CardDescription>Your attendance record for the current year</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Sick Leave</h4>
+                  <div className="flex items-end gap-2">
+                    <span className="text-3xl font-bold">3</span>
+                    <span className="text-muted-foreground text-sm">/ 10 days</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="bg-yellow-500 h-full rounded-full" style={{ width: "30%" }}></div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Vacation</h4>
+                  <div className="flex items-end gap-2">
+                    <span className="text-3xl font-bold">8</span>
+                    <span className="text-muted-foreground text-sm">/ 20 days</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="bg-blue-500 h-full rounded-full" style={{ width: "40%" }}></div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Late Arrivals</h4>
+                  <div className="flex items-end gap-2">
+                    <span className="text-3xl font-bold">2</span>
+                    <span className="text-muted-foreground text-sm">instances</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="bg-red-500 h-full rounded-full" style={{ width: "20%" }}></div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Timekeeping History */}
+        <TabsContent value="timekeeping">
+          <Card>
+            <CardHeader>
+              <CardTitle>Timekeeping History</CardTitle>
+              <CardDescription>Your recent clock in/out records</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-2 font-medium">Date</th>
+                      <th className="text-left py-3 px-2 font-medium">Clock In</th>
+                      <th className="text-left py-3 px-2 font-medium">Clock Out</th>
+                      <th className="text-left py-3 px-2 font-medium">Total Hours</th>
+                      <th className="text-left py-3 px-2 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {
+                        date: "Mar 9, 2025",
+                        clockIn: "08:55 AM",
+                        clockOut: "05:10 PM",
+                        hours: "8h 15m",
+                        status: "Complete",
+                      },
+                      {
+                        date: "Mar 8, 2025",
+                        clockIn: "09:02 AM",
+                        clockOut: "05:30 PM",
+                        hours: "8h 28m",
+                        status: "Complete",
+                      },
+                      {
+                        date: "Mar 7, 2025",
+                        clockIn: "08:45 AM",
+                        clockOut: "04:50 PM",
+                        hours: "8h 05m",
+                        status: "Complete",
+                      },
+                      {
+                        date: "Mar 6, 2025",
+                        clockIn: "09:15 AM",
+                        clockOut: "05:45 PM",
+                        hours: "8h 30m",
+                        status: "Complete",
+                      },
+                      {
+                        date: "Mar 5, 2025",
+                        clockIn: "08:50 AM",
+                        clockOut: "05:05 PM",
+                        hours: "8h 15m",
+                        status: "Complete",
+                      },
+                    ].map((record, i) => (
+                      <tr key={i} className="border-b">
+                        <td className="py-3 px-2">{record.date}</td>
+                        <td className="py-3 px-2">{record.clockIn}</td>
+                        <td className="py-3 px-2">{record.clockOut}</td>
+                        <td className="py-3 px-2">{record.hours}</td>
+                        <td className="py-3 px-2">
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            {record.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 flex justify-center">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      View All Records
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Complete Timekeeping History</DialogTitle>
+                      <DialogDescription>Your detailed clock in/out records for the past 30 days</DialogDescription>
+                    </DialogHeader>
+                    <div className="overflow-y-auto max-h-[60vh]">
+                      <table className="w-full">
+                        <thead className="sticky top-0 bg-background">
+                          <tr className="border-b">
+                            <th className="text-left py-3 px-2 font-medium">Date</th>
+                            <th className="text-left py-3 px-2 font-medium">Clock In</th>
+                            <th className="text-left py-3 px-2 font-medium">Clock Out</th>
+                            <th className="text-left py-3 px-2 font-medium">Total Hours</th>
+                            <th className="text-left py-3 px-2 font-medium">Status</th>
+                            <th className="text-left py-3 px-2 font-medium">Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            {
+                              date: "Mar 9, 2025",
+                              clockIn: "08:55 AM",
+                              clockOut: "05:10 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Mar 8, 2025",
+                              clockIn: "09:02 AM",
+                              clockOut: "05:30 PM",
+                              hours: "8h 28m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Mar 7, 2025",
+                              clockIn: "08:45 AM",
+                              clockOut: "04:50 PM",
+                              hours: "8h 05m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Mar 6, 2025",
+                              clockIn: "09:15 AM",
+                              clockOut: "05:45 PM",
+                              hours: "8h 30m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Mar 5, 2025",
+                              clockIn: "08:50 AM",
+                              clockOut: "05:05 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Mar 4, 2025",
+                              clockIn: "08:45 AM",
+                              clockOut: "05:00 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Mar 3, 2025",
+                              clockIn: "09:00 AM",
+                              clockOut: "05:15 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Mar 2, 2025",
+                              clockIn: "08:30 AM",
+                              clockOut: "04:45 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Mar 1, 2025",
+                              clockIn: "09:05 AM",
+                              clockOut: "05:20 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Feb 28, 2025",
+                              clockIn: "08:50 AM",
+                              clockOut: "05:05 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Feb 27, 2025",
+                              clockIn: "08:55 AM",
+                              clockOut: "05:10 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Feb 26, 2025",
+                              clockIn: "09:10 AM",
+                              clockOut: "05:25 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Feb 25, 2025",
+                              clockIn: "08:45 AM",
+                              clockOut: "05:00 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Feb 24, 2025",
+                              clockIn: "08:50 AM",
+                              clockOut: "05:05 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                            {
+                              date: "Feb 23, 2025",
+                              clockIn: "09:00 AM",
+                              clockOut: "05:15 PM",
+                              hours: "8h 15m",
+                              status: "Complete",
+                              notes: "",
+                            },
+                          ].map((record, i) => (
+                            <tr key={i} className="border-b">
+                              <td className="py-3 px-2">{record.date}</td>
+                              <td className="py-3 px-2">{record.clockIn}</td>
+                              <td className="py-3 px-2">{record.clockOut}</td>
+                              <td className="py-3 px-2">{record.hours}</td>
+                              <td className="py-3 px-2">
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  {record.status}
+                                </Badge>
+                              </td>
+                              <td className="py-3 px-2">{record.notes}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Leave Request History */}
+        <TabsContent value="leave">
+          <Card>
+            <CardHeader>
+              <CardTitle>Leave Request History</CardTitle>
+              <CardDescription>Your recent leave requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-2 font-medium">Type</th>
+                      <th className="text-left py-3 px-2 font-medium">From</th>
+                      <th className="text-left py-3 px-2 font-medium">To</th>
+                      <th className="text-left py-3 px-2 font-medium">Days</th>
+                      <th className="text-left py-3 px-2 font-medium">Status</th>
+                      <th className="text-left py-3 px-2 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { type: "Vacation", from: "Apr 10, 2025", to: "Apr 15, 2025", days: 5, status: "Pending" },
+                      { type: "Sick Leave", from: "Feb 3, 2025", to: "Feb 4, 2025", days: 2, status: "Approved" },
+                      { type: "Personal", from: "Jan 15, 2025", to: "Jan 15, 2025", days: 1, status: "Approved" },
+                      { type: "Vacation", from: "Dec 20, 2024", to: "Dec 31, 2024", days: 10, status: "Approved" },
+                    ].map((leave, i) => (
+                      <tr key={i} className="border-b">
+                        <td className="py-3 px-2">{leave.type}</td>
+                        <td className="py-3 px-2">{leave.from}</td>
+                        <td className="py-3 px-2">{leave.to}</td>
+                        <td className="py-3 px-2">{leave.days}</td>
+                        <td className="py-3 px-2">
+                          <Badge
+                            variant="outline"
+                            className={
+                              leave.status === "Approved"
+                                ? "bg-green-50 text-green-700 border-green-200"
+                                : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                            }
                           >
-                            <g opacity="0.8">
-                              <path
-                                fillRule="evenodd"
-                                clipRule="evenodd"
-                                d="M3.72039 12.887C4.50179 12.1056 5.5616 11.6666 6.66667 11.6666H13.3333C14.4384 11.6666 15.4982 12.1056 16.2796 12.887C17.061 13.6684 17.5 14.7282 17.5 15.8333V17.5C17.5 17.9602 17.1269 18.3333 16.6667 18.3333C16.2064 18.3333 15.8333 17.9602 15.8333 17.5V15.8333C15.8333 15.1703 15.5699 14.5344 15.1011 14.0655C14.6323 13.5967 13.9964 13.3333 13.3333 13.3333H6.66667C6.00363 13.3333 5.36774 13.5967 4.8989 14.0655C4.43006 14.5344 4.16667 15.1703 4.16667 15.8333V17.5C4.16667 17.9602 3.79357 18.3333 3.33333 18.3333C2.8731 18.3333 2.5 17.9602 2.5 17.5V15.8333C2.5 14.7282 2.93899 13.6684 3.72039 12.887Z"
-                                fill=""
-                              />
-                              <path
-                                fillRule="evenodd"
-                                clipRule="evenodd"
-                                d="M9.99967 3.33329C8.61896 3.33329 7.49967 4.45258 7.49967 5.83329C7.49967 7.214 8.61896 8.33329 9.99967 8.33329C11.3804 8.33329 12.4997 7.214 12.4997 5.83329C12.4997 4.45258 11.3804 3.33329 9.99967 3.33329ZM5.83301 5.83329C5.83301 3.53211 7.69849 1.66663 9.99967 1.66663C12.3009 1.66663 14.1663 3.53211 14.1663 5.83329C14.1663 8.13448 12.3009 9.99996 9.99967 9.99996C7.69849 9.99996 5.83301 8.13448 5.83301 5.83329Z"
-                                fill=""
-                              />
-                            </g>
-                          </svg>
-                        </span>
-                        <input
-                          className="w-full rounded border border-stroke bg-gray py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                          type="text"
-                          name="fullName"
-                          id="fullName"
-                          placeholder="Devid Jhon"
-                          defaultValue="Devid Jhon"
-                        />
+                            {leave.status}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-2">
+                          <Button variant="ghost" size="sm">
+                            Details
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 flex justify-between">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      View All Requests
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Complete Leave Request History</DialogTitle>
+                      <DialogDescription>Your detailed leave request history for the current year</DialogDescription>
+                    </DialogHeader>
+                    <div className="overflow-y-auto max-h-[60vh]">
+                      <table className="w-full">
+                        <thead className="sticky top-0 bg-background">
+                          <tr className="border-b">
+                            <th className="text-left py-3 px-2 font-medium">Type</th>
+                            <th className="text-left py-3 px-2 font-medium">From</th>
+                            <th className="text-left py-3 px-2 font-medium">To</th>
+                            <th className="text-left py-3 px-2 font-medium">Days</th>
+                            <th className="text-left py-3 px-2 font-medium">Status</th>
+                            <th className="text-left py-3 px-2 font-medium">Requested On</th>
+                            <th className="text-left py-3 px-2 font-medium">Approved By</th>
+                            <th className="text-left py-3 px-2 font-medium">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            {
+                              type: "Vacation",
+                              from: "Apr 10, 2025",
+                              to: "Apr 15, 2025",
+                              days: 5,
+                              status: "Pending",
+                              requestedOn: "Mar 1, 2025",
+                              approvedBy: "-",
+                            },
+                            {
+                              type: "Sick Leave",
+                              from: "Feb 3, 2025",
+                              to: "Feb 4, 2025",
+                              days: 2,
+                              status: "Approved",
+                              requestedOn: "Feb 2, 2025",
+                              approvedBy: "Sarah Johnson",
+                            },
+                            {
+                              type: "Personal",
+                              from: "Jan 15, 2025",
+                              to: "Jan 15, 2025",
+                              days: 1,
+                              status: "Approved",
+                              requestedOn: "Jan 10, 2025",
+                              approvedBy: "Sarah Johnson",
+                            },
+                            {
+                              type: "Vacation",
+                              from: "Dec 20, 2024",
+                              to: "Dec 31, 2024",
+                              days: 10,
+                              status: "Approved",
+                              requestedOn: "Nov 15, 2024",
+                              approvedBy: "Sarah Johnson",
+                            },
+                            {
+                              type: "Sick Leave",
+                              from: "Oct 5, 2024",
+                              to: "Oct 6, 2024",
+                              days: 2,
+                              status: "Approved",
+                              requestedOn: "Oct 5, 2024",
+                              approvedBy: "Sarah Johnson",
+                            },
+                            {
+                              type: "Personal",
+                              from: "Sep 12, 2024",
+                              to: "Sep 12, 2024",
+                              days: 1,
+                              status: "Approved",
+                              requestedOn: "Sep 5, 2024",
+                              approvedBy: "Michael Chen",
+                            },
+                            {
+                              type: "Training",
+                              from: "Aug 15, 2024",
+                              to: "Aug 17, 2024",
+                              days: 3,
+                              status: "Approved",
+                              requestedOn: "Jul 20, 2024",
+                              approvedBy: "Sarah Johnson",
+                            },
+                            {
+                              type: "Vacation",
+                              from: "Jul 1, 2024",
+                              to: "Jul 7, 2024",
+                              days: 5,
+                              status: "Approved",
+                              requestedOn: "Jun 1, 2024",
+                              approvedBy: "Sarah Johnson",
+                            },
+                            {
+                              type: "Personal",
+                              from: "May 22, 2024",
+                              to: "May 22, 2024",
+                              days: 1,
+                              status: "Approved",
+                              requestedOn: "May 15, 2024",
+                              approvedBy: "Michael Chen",
+                            },
+                            {
+                              type: "Sick Leave",
+                              from: "Apr 10, 2024",
+                              to: "Apr 11, 2024",
+                              days: 2,
+                              status: "Approved",
+                              requestedOn: "Apr 10, 2024",
+                              approvedBy: "Sarah Johnson",
+                            },
+                            {
+                              type: "Vacation",
+                              from: "Mar 5, 2024",
+                              to: "Mar 10, 2024",
+                              days: 5,
+                              status: "Approved",
+                              requestedOn: "Feb 5, 2024",
+                              approvedBy: "Sarah Johnson",
+                            },
+                            {
+                              type: "Training",
+                              from: "Feb 15, 2024",
+                              to: "Feb 16, 2024",
+                              days: 2,
+                              status: "Approved",
+                              requestedOn: "Jan 25, 2024",
+                              approvedBy: "Michael Chen",
+                            },
+                          ].map((leave, i) => (
+                            <tr key={i} className="border-b">
+                              <td className="py-3 px-2">{leave.type}</td>
+                              <td className="py-3 px-2">{leave.from}</td>
+                              <td className="py-3 px-2">{leave.to}</td>
+                              <td className="py-3 px-2">{leave.days}</td>
+                              <td className="py-3 px-2">
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    leave.status === "Approved"
+                                      ? "bg-green-50 text-green-700 border-green-200"
+                                      : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                  }
+                                >
+                                  {leave.status}
+                                </Badge>
+                              </td>
+                              <td className="py-3 px-2">{leave.requestedOn}</td>
+                              <td className="py-3 px-2">{leave.approvedBy}</td>
+                              <td className="py-3 px-2">
+                                <Button variant="ghost" size="sm">
+                                  Details
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button size="sm">New Request</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Upcoming Work Schedule */}
+        <TabsContent value="schedule">
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Work Schedule</CardTitle>
+              <CardDescription>Your schedule for the next two weeks</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { date: "Monday, Mar 10, 2025", shift: "Regular (9:00 AM - 5:00 PM)", location: "Main Office" },
+                  { date: "Tuesday, Mar 11, 2025", shift: "Regular (9:00 AM - 5:00 PM)", location: "Main Office" },
+                  { date: "Wednesday, Mar 12, 2025", shift: "Regular (9:00 AM - 5:00 PM)", location: "Main Office" },
+                  { date: "Thursday, Mar 13, 2025", shift: "Remote Work", location: "Home Office" },
+                  { date: "Friday, Mar 14, 2025", shift: "Remote Work", location: "Home Office" },
+                  { date: "Monday, Mar 17, 2025", shift: "Regular (9:00 AM - 5:00 PM)", location: "Main Office" },
+                ].map((day, i) => (
+                  <div key={i} className="flex items-start p-3 border rounded-lg">
+                    <div className="mr-4 flex-shrink-0">
+                      <CalendarDays className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium">{day.date}</h4>
+                      <p className="text-sm text-muted-foreground">{day.shift}</p>
+                      <div className="flex items-center mt-1">
+                        <MapPin className="h-3 w-3 mr-1 text-muted-foreground" />
+                        <span className="text-xs">{day.location}</span>
                       </div>
                     </div>
-
-                    <div className="w-full sm:w-1/2">
-                      <label
-                        className="mb-3 block text-sm font-medium text-black dark:text-white"
-                        htmlFor="phoneNumber"
-                      >
-                        Phone Number
-                      </label>
-                      <input
-                        className="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                        type="text"
-                        name="phoneNumber"
-                        id="phoneNumber"
-                        placeholder="+990 3343 7865"
-                        defaultValue="+990 3343 7865"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-5.5">
-                    <label
-                      className="mb-3 block text-sm font-medium text-black dark:text-white"
-                      htmlFor="emailAddress"
+                    <Badge
+                      variant="outline"
+                      className={
+                        day.location.includes("Home")
+                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                          : "bg-green-50 text-green-700 border-green-200"
+                      }
                     >
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4.5 top-4">
-                        <svg
-                          className="fill-current"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <g opacity="0.8">
-                            <path
-                              fillRule="evenodd"
-                              clipRule="evenodd"
-                              d="M3.33301 4.16667C2.87658 4.16667 2.49967 4.54357 2.49967 5V15C2.49967 15.4564 2.87658 15.8333 3.33301 15.8333H16.6663C17.1228 15.8333 17.4997 15.4564 17.4997 15V5C17.4997 4.54357 17.1228 4.16667 16.6663 4.16667H3.33301ZM0.833008 5C0.833008 3.6231 1.9561 2.5 3.33301 2.5H16.6663C18.0432 2.5 19.1663 3.6231 19.1663 5V15C19.1663 16.3769 18.0432 17.5 16.6663 17.5H3.33301C1.9561 17.5 0.833008 16.3769 0.833008 15V5Z"
-                              fill=""
-                            />
-                            <path
-                              fillRule="evenodd"
-                              clipRule="evenodd"
-                              d="M0.983719 4.52215C1.24765 4.1451 1.76726 4.05341 2.1443 4.31734L9.99975 9.81615L17.8552 4.31734C18.2322 4.05341 18.7518 4.1451 19.0158 4.52215C19.2797 4.89919 19.188 5.4188 18.811 5.68272L10.4776 11.5161C10.1907 11.7169 9.80879 11.7169 9.52186 11.5161L1.18853 5.68272C0.811486 5.4188 0.719791 4.89919 0.983719 4.52215Z"
-                              fill=""
-                            />
-                          </g>
-                        </svg>
-                      </span>
-                      <input
-                        className="w-full rounded border border-stroke bg-gray py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                        type="email"
-                        name="emailAddress"
-                        id="emailAddress"
-                        placeholder="devidjond45@gmail.com"
-                        defaultValue="devidjond45@gmail.com"
-                      />
-                    </div>
+                      {day.location.includes("Home") ? "Remote" : "In Office"}
+                    </Badge>
                   </div>
-
-                  <div className="mb-5.5">
-                    <label
-                      className="mb-3 block text-sm font-medium text-black dark:text-white"
-                      htmlFor="Username"
-                    >
-                      Username
-                    </label>
-                    <input
-                      className="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                      type="text"
-                      name="Username"
-                      id="Username"
-                      placeholder="devidjhon24"
-                      defaultValue="devidjhon24"
-                    />
-                  </div>
-
-                  <div className="mb-5.5">
-                    <label
-                      className="mb-3 block text-sm font-medium text-black dark:text-white"
-                      htmlFor="Username"
-                    >
-                      BIO
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4.5 top-4">
-                        <svg
-                          className="fill-current"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <g opacity="0.8" clipPath="url(#clip0_88_10224)">
-                            <path
-                              fillRule="evenodd"
-                              clipRule="evenodd"
-                              d="M1.56524 3.23223C2.03408 2.76339 2.66997 2.5 3.33301 2.5H9.16634C9.62658 2.5 9.99967 2.8731 9.99967 3.33333C9.99967 3.79357 9.62658 4.16667 9.16634 4.16667H3.33301C3.11199 4.16667 2.90003 4.25446 2.74375 4.41074C2.58747 4.56702 2.49967 4.77899 2.49967 5V16.6667C2.49967 16.8877 2.58747 17.0996 2.74375 17.2559C2.90003 17.4122 3.11199 17.5 3.33301 17.5H14.9997C15.2207 17.5 15.4326 17.4122 15.5889 17.2559C15.7452 17.0996 15.833 16.8877 15.833 16.6667V10.8333C15.833 10.3731 16.2061 10 16.6663 10C17.1266 10 17.4997 10.3731 17.4997 10.8333V16.6667C17.4997 17.3297 17.2363 17.9656 16.7674 18.4344C16.2986 18.9033 15.6627 19.1667 14.9997 19.1667H3.33301C2.66997 19.1667 2.03408 18.9033 1.56524 18.4344C1.0964 17.9656 0.833008 17.3297 0.833008 16.6667V5C0.833008 4.33696 1.0964 3.70107 1.56524 3.23223Z"
-                              fill=""
-                            />
-                            <path
-                              fillRule="evenodd"
-                              clipRule="evenodd"
-                              d="M16.6664 2.39884C16.4185 2.39884 16.1809 2.49729 16.0056 2.67253L8.25216 10.426L7.81167 12.188L9.57365 11.7475L17.3271 3.99402C17.5023 3.81878 17.6008 3.5811 17.6008 3.33328C17.6008 3.08545 17.5023 2.84777 17.3271 2.67253C17.1519 2.49729 16.9142 2.39884 16.6664 2.39884ZM14.8271 1.49402C15.3149 1.00622 15.9765 0.732178 16.6664 0.732178C17.3562 0.732178 18.0178 1.00622 18.5056 1.49402C18.9934 1.98182 19.2675 2.64342 19.2675 3.33328C19.2675 4.02313 18.9934 4.68473 18.5056 5.17253L10.5889 13.0892C10.4821 13.196 10.3483 13.2718 10.2018 13.3084L6.86847 14.1417C6.58449 14.2127 6.28409 14.1295 6.0771 13.9225C5.87012 13.7156 5.78691 13.4151 5.85791 13.1312L6.69124 9.79783C6.72787 9.65131 6.80364 9.51749 6.91044 9.41069L14.8271 1.49402Z"
-                              fill=""
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_88_10224">
-                              <rect width="20" height="20" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-                      </span>
-
-                      <textarea
-                        className="w-full rounded border border-stroke bg-gray py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                        name="bio"
-                        id="bio"
-                        rows={6}
-                        placeholder="Write your bio here"
-                        defaultValue="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque posuere fermentum urna, eu condimentum mauris tempus ut. Donec fermentum blandit aliquet."
-                      ></textarea>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-4.5">
-                    <button
-                      className="flex justify-center rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
-                      type="submit"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="flex justify-center rounded bg-primary py-2 px-6 font-medium text-gray hover:bg-opacity-90"
-                      type="submit"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
+                ))}
               </div>
-            </div>
-          </div>
-          <div className="col-span-5 xl:col-span-2">
-            <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-              <div className="border-b border-stroke py-4 px-7 dark:border-strokedark">
-                <h3 className="font-medium text-black dark:text-white">
-                  Your Photo
-                </h3>
-              </div>
-              <div className="p-7">
-                <form action="#">
-                  <div className="mb-4 flex items-center gap-3">
-                    {/* <div className="h-14 w-14 rounded-full">
-                      <img src={} alt="User" />
-                    </div> */}
-                    <div>
-                      <span className="mb-1.5 text-black dark:text-white">
-                        Edit your photo
-                      </span>
-                      <span className="flex gap-2.5">
-                        <button className="text-sm hover:text-primary">
-                          Delete
-                        </button>
-                        <button className="text-sm hover:text-primary">
-                          Update
-                        </button>
-                      </span>
+              <div className="mt-4 flex justify-center">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      View Full Calendar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Work Schedule Calendar</DialogTitle>
+                      <DialogDescription>Your complete work schedule for the month</DialogDescription>
+                    </DialogHeader>
+                    <div className="p-2">
+                      <div className="grid grid-cols-7 gap-1 mb-2">
+                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                          <div key={day} className="text-center font-medium text-sm py-1">
+                            {day}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1">
+                        {Array.from({ length: 35 }).map((_, i) => {
+                          const day = i - 2 // Offset to start month on a Monday
+                          const isCurrentMonth = day >= 0 && day < 31
+                          const isToday = day === 9 // Assuming today is the 10th
+                          const hasEvent = [10, 11, 12, 13, 14, 17, 18, 19, 20, 21].includes(day)
+                          const isRemoteDay = [13, 14, 20, 21].includes(day)
+
+                          return (
+                            <div
+                              key={i}
+                              className={`
+                  border rounded-md p-2 min-h-[80px] relative
+                  ${!isCurrentMonth ? "bg-muted/50 text-muted-foreground" : ""}
+                  ${isToday ? "border-primary" : ""}
+                `}
+                            >
+                              {isCurrentMonth && (
+                                <>
+                                  <div className="text-right text-sm">{day + 1}</div>
+                                  {hasEvent && (
+                                    <div
+                                      className={`
+                        mt-1 text-xs p-1 rounded
+                        ${isRemoteDay ? "bg-blue-50 text-blue-700" : "bg-green-50 text-green-700"}
+                      `}
+                                    >
+                                      {isRemoteDay ? "Remote Work" : "Office (9-5)"}
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-
-                  <div
-                    id="FileUpload"
-                    className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded border border-dashed border-primary bg-gray py-4 px-4 dark:bg-meta-4 sm:py-7.5"
-                  >
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
-                    />
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full border border-stroke bg-white dark:border-strokedark dark:bg-boxdark">
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M1.99967 9.33337C2.36786 9.33337 2.66634 9.63185 2.66634 10V12.6667C2.66634 12.8435 2.73658 13.0131 2.8616 13.1381C2.98663 13.2631 3.1562 13.3334 3.33301 13.3334H12.6663C12.8431 13.3334 13.0127 13.2631 13.1377 13.1381C13.2628 13.0131 13.333 12.8435 13.333 12.6667V10C13.333 9.63185 13.6315 9.33337 13.9997 9.33337C14.3679 9.33337 14.6663 9.63185 14.6663 10V12.6667C14.6663 13.1971 14.4556 13.7058 14.0806 14.0809C13.7055 14.456 13.1968 14.6667 12.6663 14.6667H3.33301C2.80257 14.6667 2.29387 14.456 1.91879 14.0809C1.54372 13.7058 1.33301 13.1971 1.33301 12.6667V10C1.33301 9.63185 1.63148 9.33337 1.99967 9.33337Z"
-                            fill="#3C50E0"
-                          />
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M7.5286 1.52864C7.78894 1.26829 8.21106 1.26829 8.4714 1.52864L11.8047 4.86197C12.0651 5.12232 12.0651 5.54443 11.8047 5.80478C11.5444 6.06513 11.1223 6.06513 10.8619 5.80478L8 2.94285L5.13807 5.80478C4.87772 6.06513 4.45561 6.06513 4.19526 5.80478C3.93491 5.54443 3.93491 5.12232 4.19526 4.86197L7.5286 1.52864Z"
-                            fill="#3C50E0"
-                          />
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M7.99967 1.33337C8.36786 1.33337 8.66634 1.63185 8.66634 2.00004V10C8.66634 10.3682 8.36786 10.6667 7.99967 10.6667C7.63148 10.6667 7.33301 10.3682 7.33301 10V2.00004C7.33301 1.63185 7.63148 1.33337 7.99967 1.33337Z"
-                            fill="#3C50E0"
-                          />
-                        </svg>
-                      </span>
-                      <p>
-                        <span className="text-primary">Click to upload</span> or
-                        drag and drop
-                      </p>
-                      <p className="mt-1.5">SVG, PNG, JPG or GIF</p>
-                      <p>(max, 800 X 800px)</p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-4.5">
-                    <button
-                      className="flex justify-center rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
-                      type="submit"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="flex justify-center rounded bg-primary py-2 px-6 font-medium text-gray hover:bg-opacity-90"
-                      type="submit"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
+                  </DialogContent>
+                </Dialog>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
 
-export default Settings;
