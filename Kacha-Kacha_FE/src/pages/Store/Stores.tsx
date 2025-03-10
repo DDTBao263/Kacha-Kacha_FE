@@ -11,6 +11,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '../../components/ui/pagination';
+import { AddStoreDialog } from './NewStore';
 
 interface Store {
   id: number;
@@ -22,28 +23,58 @@ interface Store {
 
 const Stores = () => {
   const [stores, setStores] = useState<Store[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchStores = async (page: number, size: number = 10) => {
+    try {
+      const response = await storeService.getAllStores(page - 1, size);
+      const storesData =
+        response.data.data.content?.map((store: any, index: number) => ({
+          id: index + 1,
+          name: `Kacha-Kacha ${index + 1}`,
+          location: store.location,
+          phoneNumber: store.phoneNumber,
+          status: store.status,
+        })) || [];
+      setStores(storesData);
+      const total = response.data.data.totalPages || 1;
+      setTotalPages(total); // Assuming totalPages is available in the API response
+    } catch (error) {
+      console.error('Failed to fetch stores:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchStores = async () => {
-      try {
-        const response = await storeService.getAllStores();
-        const storesData = response.data.data.map(
-          (store: any, index: number) => ({
-            id: index + 1,
-            name: `Kacha-Kacha ${index + 1}`,
-            location: store.location,
-            phoneNumber: store.phoneNumber,
-            status: store.status,
-          }),
-        );
-        setStores(storesData);
-      } catch (error) {
-        console.error('Failed to fetch stores:', error);
-      }
-    };
+    const fetchData = () => fetchStores(currentPage, 10);
 
-    fetchStores();
-  }, []);
+    fetchData(); // Gọi ngay khi component mount hoặc currentPage thay đổi
+
+    window.addEventListener('refreshStores', fetchData);
+    return () => window.removeEventListener('refreshStores', fetchData);
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+  // const handleAddStore = async (newStore: {
+  //   location: string;
+  //   phoneNumber: string;
+  // }) => {
+  //   const store: Store = {
+  //     id: stores.length + 1,
+  //     name: `Kacha-Kacha ${stores.length + 1}`,
+  //     location: newStore.location,
+  //     phoneNumber: newStore.phoneNumber,
+  //     status: 'OPEN', // Assuming new stores have an 'OPEN' status by default
+  //   };
+
+  //   setStores([...stores, store]);
+  //   setIsAddDialogOpen(false);
+  // };
 
   return (
     <>
@@ -57,7 +88,12 @@ const Stores = () => {
               className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
-          <Button className="ml-auto py-6 px-10">Add Store</Button>
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            className="ml-auto py-6 px-10"
+          >
+            Add Store
+          </Button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
@@ -137,32 +173,37 @@ const Stores = () => {
         <Pagination className="mt-6">
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink
+              <PaginationPrevious
                 href="#"
-                isActive
-                className="border-2 border-gray-900"
-              >
-                1
-              </PaginationLink>
+                onClick={() => handlePageChange(currentPage - 1)}
+                isDisabled={currentPage === 1}
+              />
             </PaginationItem>
+            {[...Array(totalPages)].map((_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  href="#"
+                  isActive={index + 1 === currentPage}
+                  onClick={() => handlePageChange(index + 1)}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
             <PaginationItem>
-              <PaginationLink href="#">2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
+              <PaginationNext
+                href="#"
+                onClick={() => handlePageChange(currentPage + 1)}
+                isDisabled={currentPage === totalPages}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
       </div>
+      <AddStoreDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+      />
     </>
   );
 };

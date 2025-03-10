@@ -62,12 +62,22 @@ PaginationLink.displayName = 'PaginationLink';
 
 const PaginationPrevious = ({
   className,
+  onClick,
+  isDisabled,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+}: React.ComponentProps<typeof PaginationLink> & { isDisabled?: boolean }) => (
   <PaginationLink
     aria-label="Go to previous page"
     size="default"
-    className={cn('gap-1 pl-2.5', className)}
+    className={cn(
+      'gap-1 pl-2.5',
+      className,
+      isDisabled ? 'pointer-events-none opacity-50' : '',
+    )}
+    onClick={(e) => {
+      if (isDisabled) e.preventDefault();
+      else onClick && onClick(e);
+    }}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
@@ -78,12 +88,22 @@ PaginationPrevious.displayName = 'PaginationPrevious';
 
 const PaginationNext = ({
   className,
+  onClick,
+  isDisabled,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+}: React.ComponentProps<typeof PaginationLink> & { isDisabled?: boolean }) => (
   <PaginationLink
     aria-label="Go to next page"
     size="default"
-    className={cn('gap-1 pr-2.5', className)}
+    className={cn(
+      'gap-1 pr-2.5',
+      className,
+      isDisabled ? 'pointer-events-none opacity-50' : '',
+    )}
+    onClick={(e) => {
+      if (isDisabled) e.preventDefault();
+      else onClick && onClick(e);
+    }}
     {...props}
   >
     <span>Next</span>
