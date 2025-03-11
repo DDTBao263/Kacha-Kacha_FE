@@ -40,7 +40,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       { name: 'Account', path: '/admin/account' },
     ],
     RESTAURANT_MANAGER: [
-      { name: 'Dashboard', path: '/restaurant/restaurantdash' },
+      { name: 'Dashboard', path: '/restaurant/resdash' },
       { name: 'Employee', path: '/restaurant/employee' },
       { name: 'Reports', path: '/restaurant/reports' },
     ],
