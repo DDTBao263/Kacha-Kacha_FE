@@ -11,9 +11,12 @@ import {
   // signInWithRedirect,
 } from 'firebase/auth';
 import { authService } from '../../services/authentication/auth';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../../redux/authSlice';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const checkTokenExpiration = (token: string) => {
     const decodedToken: any = jwtDecode(token);
@@ -45,6 +48,7 @@ const SignIn: React.FC = () => {
         // localStorage.setItem('accessToken', response.token); // Đổi key theo backend trả về
         // localStorage.setItem('user', JSON.stringify(response.user)); // Lưu thông tin user
         navigate('/');
+        dispatch(loginSuccess(response));
       }
     } catch (error) {
       console.error('Google sign-in error:', error);
