@@ -4,19 +4,37 @@ import ClickOutside from '../Sidebar/ClickOutside';
 import UserOne from '../../assets/images/user/user-01.png';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../config/firebase';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
+import { persistor } from "../../redux/store";
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
-
+  const user = useSelector((state: RootState) => state.auth.user);
   const handleLogout = async () => {
-    // Thực hiện logic logout nếu cần (clear token, xóa session...)
-    await signOut(auth);
-    localStorage.removeItem('idToken'); // Xóa token nếu dùng localStorage
-    setDropdownOpen(false);
-    setTimeout(() => navigate('auth/signin'), 100);
-  };
+    try {
+      await signOut(auth); // Đăng xuất Firebase Auth
+      localStorage.removeItem('idToken'); 
+      localStorage.removeItem('jwtToken'); 
 
+      // Xóa Redux Store đã persist
+      await persistor.purge(); 
+      await persistor.flush();
+
+
+      setDropdownOpen(false);
+  
+      // Điều hướng & refresh trang
+      navigate('/auth/signin');
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    } catch (error) {
+      console.error('Lỗi khi đăng xuất:', error);
+    }
+  };
+  
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
       <Link
@@ -25,15 +43,15 @@ const DropdownUser = () => {
         to="#"
       >
         <span className="hidden text-right lg:block">
-          <span className="block text-sm font-medium text-black dark:text-white">
-            Thomas Anree
-          </span>
-          {/* <span className="block text-xs">UX Designer</span> */}
+      <span className="block text-sm font-medium text-black dark:text-white">
+        {user?.firstName} {user?.lastName} {/* Hiển thị tên người dùng */}
+      </span>
+      {/* <span className="block text-xs">UX Designer</span> */}
         </span>
 
-        <span className="h-12 w-12 rounded-full">
-          <img src={UserOne} alt="User" />
-        </span>
+      <span className="h-12 w-12 rounded-full">
+        <img src={user?.imageUrl || UserOne} alt="User" /> {/* Hiển thị avatar */}
+      </span>
 
         <svg
           className="hidden fill-current sm:block"
