@@ -11,7 +11,7 @@ interface Props {
 export const PrivateRoute: React.FC<Props> = ({ allowedUserTypes }) => {
     const userType = useSelector((state: RootState) => state.auth.user?.userType);
     const isAllowed = allowedUserTypes.includes(userType || '');
-    console.log(userType)
+    // console.log(userType)
     if (!isAllowed) {
       return <Navigate to="/auth/signin" />;
     }

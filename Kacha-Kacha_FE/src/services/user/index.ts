@@ -34,7 +34,22 @@ export const userService = {
       },
     });
   },
-
+  
+  getUserByID: async (
+    id: number,
+    role: string,
+  ) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(
+      `/api/users/${id}?role=${role}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+        },
+      },
+    );
+  },
+  
   updateUser: async (updatedUser: {
     userId: string;
     firstName: string;

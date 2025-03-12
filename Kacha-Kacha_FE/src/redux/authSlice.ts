@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface UserState {
   user: {
     jwt_token: string;
-    id: string;
+    id: number;
     userType: string;
     firstName: string;
     lastName: string;
