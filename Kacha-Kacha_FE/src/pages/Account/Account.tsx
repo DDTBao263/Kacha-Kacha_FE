@@ -1,6 +1,6 @@
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { ACCOUNT } from '../../types/account';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { AddAccountDialog } from './NewAccount';
 import { Button } from '../../components/ui/button';
 import {
@@ -13,11 +13,15 @@ import {
 } from '../../components/ui/pagination';
 import { EditAccountDialog } from './EditAccount';
 import { userService } from '../../services/user';
+import { debounce } from 'lodash';
 
 const Account = () => {
   const [accounts, setAccounts] = useState<ACCOUNT[]>([]);
   const [selectedOption, setSelectedOption] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [isOptionSelected, setIsOptionSelected] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<ACCOUNT | null>(null);
@@ -25,19 +29,30 @@ const Account = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetchAccounts(currentPage, 10);
-  }, [currentPage]);
+    fetchAccounts(currentPage, 10, selectedRole, selectedStatus, searchQuery);
+  }, [currentPage, selectedRole, selectedStatus, searchQuery]);
 
-  const fetchAccounts = async (page: number, size: number = 10) => {
+  const fetchAccounts = async (
+    page: number,
+    size: number = 10,
+    role: string,
+    status: string,
+    keyword: string,
+  ) => {
     try {
-      const response = await userService.getAllUsers(page - 1, size);
+      const response = await userService.getAllUsers(
+        page - 1,
+        size,
+        role,
+        status,
+        keyword,
+      );
       const users =
         response.data.data.content?.map((user: any) => ({
           id: user.userID,
           name: `${user.lastName} ${user.firstName}`,
           email: user.email,
           role: user.role,
-          restaurantName: '-', // Assuming restaurantName is not available in the API response
           status: user.status, // Assuming status is not available in the API response
           joinDate: user.createdAt, // Assuming joinDate is not available in the API response
         })) || [];
@@ -60,14 +75,15 @@ const Account = () => {
     role: string;
   }) => {
     const today = new Date();
-    const formattedDate = `Jan ${today.getDate()},${today.getFullYear()}`;
+    const formattedDate = `${
+      today.getMonth
+    } ${today.getDate()},${today.getFullYear()}`;
 
     const account: ACCOUNT = {
       name: `${newAccount.firstName} ${newAccount.lastName}`, // Ghép tên
       email: newAccount.email,
       role: newAccount.role,
-      restaurantName: 'Default Restaurant', // Giá trị mặc định nếu cần
-      status: 'Active', // Giá trị mặc định nếu cần
+      status: 'INACTIVE', // Giá trị mặc định nếu cần
       joinDate: formattedDate,
     };
 
@@ -83,6 +99,17 @@ const Account = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  const debouncedSearch = useCallback(
+    debounce((keyword) => {
+      setSearchQuery(keyword);
+    }, 50),
+    [],
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    debouncedSearch(e.target.value);
+  };
   return (
     <>
       <Breadcrumb pageName="Account" />
@@ -93,35 +120,45 @@ const Account = () => {
               type="text"
               placeholder="Search by name, email..."
               className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              onChange={handleSearchChange}
             />
           </div>
           <div className="flex flex-wrap gap-2">
             <div className="relative z-20 bg-transparent dark:bg-form-input">
               <select
-                value={selectedOption}
+                value={selectedRole}
                 onChange={(e) => {
-                  setSelectedOption(e.target.value);
+                  setSelectedRole(e.target.value);
                   changeTextColor();
                 }}
-                className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 pl-5 pr-12 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
-                  isOptionSelected ? 'text-black dark:text-white' : ''
-                }`}
+                className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 pl-5 pr-12 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
               >
+                <option value="" className="text-body dark:text-bodydark">
+                  All Role
+                </option>
+                <option value="ADMIN" className="text-body dark:text-bodydark">
+                  ADMIN
+                </option>
                 <option
-                  value=""
-                  disabled
+                  value="RESTAURANT_MANAGER"
                   className="text-body dark:text-bodydark"
                 >
-                  Select your subject
+                  RESTAURANT_MANAGER
                 </option>
-                <option value="USA" className="text-body dark:text-bodydark">
-                  USA
+                <option
+                  value="STORE_MANAGER"
+                  className="text-body dark:text-bodydark"
+                >
+                  STORE_MANAGER
                 </option>
-                <option value="UK" className="text-body dark:text-bodydark">
-                  UK
+                <option
+                  value="EMPLOYEE"
+                  className="text-body dark:text-bodydark"
+                >
+                  EMPLOYEE
                 </option>
-                <option value="Canada" className="text-body dark:text-bodydark">
-                  Canada
+                <option value="DRAFT" className="text-body dark:text-bodydark">
+                  DRAFT
                 </option>
               </select>
 
@@ -147,79 +184,30 @@ const Account = () => {
             </div>
             <div className="relative z-20 bg-transparent dark:bg-form-input">
               <select
-                value={selectedOption}
+                value={selectedStatus}
                 onChange={(e) => {
-                  setSelectedOption(e.target.value);
+                  setSelectedStatus(e.target.value);
                   changeTextColor();
                 }}
-                className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 pl-5 pr-12 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
-                  isOptionSelected ? 'text-black dark:text-white' : ''
-                }`}
+                className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 pl-5 pr-12 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
               >
+                <option value="" className="text-body dark:text-bodydark">
+                  All status
+                </option>
+                <option value="ACTIVE" className="text-body dark:text-bodydark">
+                  ACTIVE
+                </option>
                 <option
-                  value=""
-                  disabled
+                  value="INACTIVE"
                   className="text-body dark:text-bodydark"
                 >
-                  Select your subject
+                  INACTIVE
                 </option>
-                <option value="USA" className="text-body dark:text-bodydark">
-                  USA
-                </option>
-                <option value="UK" className="text-body dark:text-bodydark">
-                  UK
-                </option>
-                <option value="Canada" className="text-body dark:text-bodydark">
-                  Canada
-                </option>
-              </select>
-
-              <span className="absolute top-1/2 right-4 z-30 -translate-y-1/2">
-                <svg
-                  className="fill-current"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g opacity="0.8">
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z"
-                      fill=""
-                    ></path>
-                  </g>
-                </svg>
-              </span>
-            </div>
-            <div className="relative z-20 bg-transparent dark:bg-form-input">
-              <select
-                value={selectedOption}
-                onChange={(e) => {
-                  setSelectedOption(e.target.value);
-                  changeTextColor();
-                }}
-                className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 pl-5 pr-12 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
-                  isOptionSelected ? 'text-black dark:text-white' : ''
-                }`}
-              >
                 <option
-                  value=""
-                  disabled
+                  value="SUSPENDED"
                   className="text-body dark:text-bodydark"
                 >
-                  Select your subject
-                </option>
-                <option value="USA" className="text-body dark:text-bodydark">
-                  USA
-                </option>
-                <option value="UK" className="text-body dark:text-bodydark">
-                  UK
-                </option>
-                <option value="Canada" className="text-body dark:text-bodydark">
-                  Canada
+                  SUSPENDED
                 </option>
               </select>
 
@@ -262,11 +250,9 @@ const Account = () => {
                   EMAIL
                 </th>
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
-                  POSITION
+                  ROLE
                 </th>
-                <th className="text-left py-4 px-4 font-medium text-slate-600">
-                  RESTAURANT
-                </th>
+
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
                   STATUS
                 </th>
@@ -284,9 +270,7 @@ const Account = () => {
                   <td className="py-4 px-4 text-slate-800">{account.name}</td>
                   <td className="py-4 px-4 text-slate-800">{account.email}</td>
                   <td className="py-4 px-4 text-slate-800">{account.role}</td>
-                  <td className="py-4 px-4 text-slate-800">
-                    {account.restaurantName}
-                  </td>
+
                   <td className="py-4 px-4">
                     <p
                       className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${

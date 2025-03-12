@@ -11,12 +11,14 @@ import {
   // signInWithRedirect,
 } from 'firebase/auth';
 import { authService } from '../../services/authentication/auth';
-import { useDispatch } from 'react-redux';
-import { loginSuccess } from '../../redux/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginSuccess, loginRequest } from '../../redux/authSlice';
+import { RootState } from '../../redux/store';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { loading } = useSelector((state: RootState) => state.auth);
 
   const checkTokenExpiration = (token: string) => {
     const decodedToken: any = jwtDecode(token);
@@ -25,6 +27,7 @@ const SignIn: React.FC = () => {
   };
 
   const handleSignIn = async () => {
+    dispatch(loginRequest());
     // try {
     //   await signInWithRedirect(auth, provider);
     // } catch (error) {
@@ -42,11 +45,22 @@ const SignIn: React.FC = () => {
         console.log('Login successful: ', response);
         const jwt_token = response.jwt_token;
         localStorage.setItem('jwtToken', jwt_token);
-        const decodedToken = jwtDecode(jwt_token);
+        const decodedToken: any = jwtDecode(jwt_token);
         console.log('Decoded Token: ', decodedToken);
-        // Lưu token vào localStorage
-        // localStorage.setItem('accessToken', response.token); // Đổi key theo backend trả về
-        // localStorage.setItem('user', JSON.stringify(response.user)); // Lưu thông tin user
+
+        // Trích xuất thông tin cần thiết
+        const userData = {
+          jwt_token,
+          id: decodedToken.id,
+          userType: decodedToken.userType,
+          firstName: decodedToken.firstName,
+          lastName: decodedToken.lastName,
+          email: decodedToken.email,
+          imageUrl: decodedToken.picture || null,
+        };
+
+        // Cập nhật Redux store
+        dispatch(loginSuccess(userData));
         navigate('/');
         dispatch(loginSuccess(response));
       }
@@ -256,6 +270,7 @@ const SignIn: React.FC = () => {
 
               <button
                 onClick={handleSignIn}
+                disabled={loading}
                 className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50 dark:border-strokedark dark:bg-meta-4 dark:hover:bg-opacity-50"
               >
                 <span>
