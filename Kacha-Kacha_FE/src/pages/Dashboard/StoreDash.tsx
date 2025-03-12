@@ -10,7 +10,6 @@ import { userService } from "../../services/user/index";
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 
-
 type DashboardData = {
   date: string;
   day: string;
@@ -21,35 +20,40 @@ type DashboardData = {
   numberOfOnTime: number;
 };
 
+type CoverageData = {
+  date: string;
+  totalEmployeeOfRestaurant: number;
+  numberOfEmployeeOnShift: number;
+  percent: number;
+}[];
 
 const StoreDash = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const [cardData, setCardData] = useState<DashboardData | null>(null);
+  const [coverageData, setCoverageData] = useState<CoverageData>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.id) {
-        // console.error("User ID is missing");
         return;
       }
   
       try {
         const userResponse = await userService.getUserByID(user.id, 'STORE_MANAGER');
-        // console.log("User response:", userResponse);
   
         if (!userResponse?.data?.data?.restaurantId) {
           throw new Error("restaurantId is missing");
         }
   
         const restaurantId = userResponse.data.data.restaurantId;
-        // console.log("Fetching dashboard data for restaurant:", restaurantId);
         const dashResponse = await dashboardService.getSMDash(restaurantId);
-        // console.log("Dashboard response:", dashResponse);
-  
-        setCardData(dashResponse.data);
-        // console.log(dashResponse.data)
+        const coverageResponse = await dashboardService.getCoverage(restaurantId);
+        
+
+        setCardData(dashResponse.data.data);
+        setCoverageData(coverageResponse.data.data);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -75,7 +79,7 @@ const StoreDash = () => {
           )}
 
           {/* Chart */}
-          <StaffCoverage />
+          <StaffCoverage data={coverageData} />
 
           {/* Navigate */}
           <QuickAction />
