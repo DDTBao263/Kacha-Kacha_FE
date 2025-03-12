@@ -19,14 +19,12 @@ interface EditAccountDialogProps {
     name: string;
     email: string;
     role: string;
-    restaurantName: string;
     status: string;
   } | null;
   onSave: (updatedAccount: {
     name: string;
     email: string;
     role: string;
-    restaurantName: string;
     status: string;
   }) => void;
 }
@@ -40,7 +38,6 @@ export function EditAccountDialog({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
-  const [restaurantName, setRestaurantName] = useState('');
   const [status, setStatus] = useState('');
 
   useEffect(() => {
@@ -48,7 +45,6 @@ export function EditAccountDialog({
       setName(account.name);
       setEmail(account.email);
       setRole(account.role);
-      setRestaurantName(account.restaurantName);
       setStatus(account.status);
     }
   }, [account]);
@@ -57,7 +53,7 @@ export function EditAccountDialog({
     e.preventDefault();
     if (!name || !email || !role) return;
 
-    onSave({ name, email, role, restaurantName, status });
+    onSave({ name, email, role, status });
     onOpenChange(false);
   };
 
@@ -94,15 +90,6 @@ export function EditAccountDialog({
               value={role}
               onChange={(e) => setRole(e.target.value)}
               required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="restaurant">Restaurant</Label>
-            <Input
-              id="restaurant"
-              value={restaurantName}
-              onChange={(e) => setRestaurantName(e.target.value)}
             />
           </div>
 
