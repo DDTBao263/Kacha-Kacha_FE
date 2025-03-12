@@ -34,7 +34,7 @@ export const userService = {
       },
     });
   },
-
+  
   getUserByID: async (
     id: number,
     role: string,
@@ -50,4 +50,20 @@ export const userService = {
     );
   },
   
+  updateUser: async (updatedUser: {
+    userId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: string;
+    status: string;
+  }) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.put(`/api/users/${updatedUser.userId}`, updatedUser, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  },
 };

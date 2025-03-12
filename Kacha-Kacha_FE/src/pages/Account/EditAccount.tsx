@@ -11,50 +11,80 @@ import {
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { userService } from '../../services/user';
 
 interface EditAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   account: {
-    name: string;
+    userId: string;
+    firstName: string;
+    lastName: string;
     email: string;
     role: string;
     status: string;
   } | null;
-  onSave: (updatedAccount: {
-    name: string;
-    email: string;
-    role: string;
-    status: string;
-  }) => void;
+  // onSave: (updatedAccount: {
+  //   id: string;
+  //   firstName: string;
+  //   lastName: string;
+  //   name: string;
+  //   email: string;
+  //   role: string;
+  //   status: string;
+  // }) => void;
 }
 
 export function EditAccountDialog({
   open,
   onOpenChange,
-  account,
-  onSave,
+  account, // onSave,
 }: EditAccountDialogProps) {
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [status, setStatus] = useState('');
 
   useEffect(() => {
     if (account) {
-      setName(account.name);
-      setEmail(account.email);
-      setRole(account.role);
-      setStatus(account.status);
+      setFirstName(account.firstName || '');
+      setLastName(account.lastName || '');
+      setEmail(account.email || '');
+      setRole(account.role || '');
+      setStatus(account.status || '');
+    } else {
+      setFirstName('');
+      setLastName('');
+      setEmail('');
+      setRole('');
+      setStatus('');
     }
   }, [account]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !role) return;
+    if (!firstName || !lastName || !email || !role) return;
 
-    onSave({ name, email, role, status });
-    onOpenChange(false);
+    const updatedAccount = {
+      userId: account?.userId || '',
+      firstName,
+      lastName,
+      email,
+      role,
+      status,
+    };
+    console.log('Updated account:', updatedAccount);
+
+    try {
+      await userService.updateUser(updatedAccount);
+
+      // onSave(updatedAccount);
+      onOpenChange(false);
+      window.dispatchEvent(new Event('refreshAccounts'));
+    } catch (error) {
+      console.error('Failed to update account:', error);
+    }
   };
 
   return (
@@ -69,11 +99,21 @@ export function EditAccountDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="firstName">First Name</Label>
             <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               required
             />
           </div>
@@ -89,18 +129,23 @@ export function EditAccountDialog({
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              required
+              disabled
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
-            <Input
+            <select
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               required
-            />
+              className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+            >
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="INACTIVE">INACTIVE</option>
+              <option value="SUSPENDED">SUSPENDED</option>
+            </select>
           </div>
 
           <DialogFooter className="pt-4">
