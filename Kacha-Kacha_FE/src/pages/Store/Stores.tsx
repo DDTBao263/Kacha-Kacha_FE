@@ -5,7 +5,6 @@ import { Button } from '../../components/ui/button';
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,

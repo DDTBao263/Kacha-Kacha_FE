@@ -13,11 +13,10 @@ import {
 } from '../../components/ui/pagination';
 import { EditAccountDialog } from './EditAccount';
 import { userService } from '../../services/user';
-import { debounce } from 'lodash';
+import { debounce, update } from 'lodash';
 
 const Account = () => {
   const [accounts, setAccounts] = useState<ACCOUNT[]>([]);
-  const [selectedOption, setSelectedOption] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [isOptionSelected, setIsOptionSelected] = useState<boolean>(false);
@@ -47,9 +46,12 @@ const Account = () => {
         status,
         keyword,
       );
+      console.log('API Response:', response);
       const users =
         response.data.data.content?.map((user: any) => ({
-          id: user.userID,
+          id: user.userId,
+          firstName: user.firstName,
+          lastName: user.lastName,
           name: `${user.lastName} ${user.firstName}`,
           email: user.email,
           role: user.role,
@@ -68,30 +70,9 @@ const Account = () => {
     setIsOptionSelected(true);
   };
 
-  const handleAddAccount = (newAccount: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-  }) => {
-    const today = new Date();
-    const formattedDate = `${
-      today.getMonth
-    } ${today.getDate()},${today.getFullYear()}`;
-
-    const account: ACCOUNT = {
-      name: `${newAccount.firstName} ${newAccount.lastName}`, // Ghép tên
-      email: newAccount.email,
-      role: newAccount.role,
-      status: 'INACTIVE', // Giá trị mặc định nếu cần
-      joinDate: formattedDate,
-    };
-
-    setAccounts([...accounts, account]);
-    setIsAddDialogOpen(false);
-  };
-
   const handleEditClick = (account: ACCOUNT) => {
+    console.log('Selected account ID:', account.userId);
+    console.log('Selected account:', account);
     setSelectedAccount(account);
     setEditDialogOpen(true);
   };
@@ -270,13 +251,12 @@ const Account = () => {
                   <td className="py-4 px-4 text-slate-800">{account.name}</td>
                   <td className="py-4 px-4 text-slate-800">{account.email}</td>
                   <td className="py-4 px-4 text-slate-800">{account.role}</td>
-
                   <td className="py-4 px-4">
                     <p
                       className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
                         account.status === 'ACTIVE'
                           ? 'bg-success text-success'
-                          : account.status === 'INACTIVE'
+                          : account.status === 'SUSPENDED'
                           ? 'bg-danger text-danger'
                           : 'bg-warning text-warning'
                       }`}
@@ -349,16 +329,12 @@ const Account = () => {
       <AddAccountDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
-        onAddAccount={handleAddAccount}
       />
       <EditAccountDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         account={selectedAccount} // Truyền tài khoản được chọn vào dialog
-        onSave={(updatedAccount) => {
-          console.log('Updated Account:', updatedAccount);
-          setEditDialogOpen(false);
-        }}
+        // onSave={handleUpdateAccount}
       />
     </>
   );

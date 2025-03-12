@@ -26,19 +26,19 @@ import { userService } from '../../services/user';
 interface AddAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddAccount: (account: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-  }) => void;
+  // onAddAccount: (account: {
+  //   firstName: string;
+  //   lastName: string;
+  //   email: string;
+  //   role: string;
+  // }) => void;
 }
 
 export function AddAccountDialog({
   open,
   onOpenChange,
-  onAddAccount,
-}: AddAccountDialogProps) {
+} // onAddAccount,
+: AddAccountDialogProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -66,12 +66,12 @@ export function AddAccountDialog({
 
     try {
       await userService.addUser(newUser);
-      onAddAccount(newUser);
       onOpenChange(false); // ✅ Đóng dialog sau khi thêm thành công
       setFirstName('');
       setLastName('');
       setEmail('');
       setRole('');
+      window.dispatchEvent(new Event('refreshAccounts'));
     } catch (error) {
       setError('Failed to add user. Please try again.');
       console.error(error);
@@ -86,8 +86,7 @@ export function AddAccountDialog({
         <DialogHeader>
           <DialogTitle>Add New Account</DialogTitle>
           <DialogDescription>
-            Create a new user account. An invitation email will be sent to the
-            provided email address.
+            Create a new user account. Please provide the necessary details.
           </DialogDescription>
         </DialogHeader>
 
