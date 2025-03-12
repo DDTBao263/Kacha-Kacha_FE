@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { AttendanceData } from "../../types/attendance" 
 import { AttendanceDialog } from "./AttendanceDialog"
 import { extendedAttendanceData } from "../Attendance/AttendanceDialog"
+import { getStatusVariant} from "../../utils/Helper"
+import { AttendanceTable } from "../../components/PageUI/Report/AttendanceTable"
 
 export default function AttendancePage() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -224,18 +226,3 @@ export default function AttendancePage() {
 }
 
 
-/////////////////////////////
-  
-  // Helper function
-  function getStatusVariant(status: string) {
-    switch (status) {
-      case "Present":
-        return "success"
-      case "Absent":
-        return "destructive"
-      case "Late":
-        return "warning"
-      default:
-        return "default"
-    }
-  }

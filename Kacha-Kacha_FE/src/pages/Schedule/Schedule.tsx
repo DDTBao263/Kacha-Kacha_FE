@@ -221,14 +221,14 @@ export default function Schedule() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Work Schedule</h1>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handlePreviousWeek}>
+            {/* <Button variant="outline" onClick={handlePreviousWeek}>
               Previous Week
-            </Button>
+            </Button> */}
             <Button
               variant="outline"
               onClick={() => setCurrentDate(new Date())}
             >
-              Today
+              This Week
             </Button>
             <Button variant="outline" onClick={handleNextWeek}>
               Next Week
@@ -271,21 +271,6 @@ export default function Schedule() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="schedule" className="w-full">
-              <TabsList className="grid w-full max-w-md grid-cols-3">
-                <TabsTrigger value="schedule">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Schedule
-                </TabsTrigger>
-                <TabsTrigger value="employees">
-                  <Users className="mr-2 h-4 w-4" />
-                  Employees
-                </TabsTrigger>
-                <TabsTrigger value="shifts">
-                  <Clock className="mr-2 h-4 w-4" />
-                  Shifts
-                </TabsTrigger>
-              </TabsList>
-
               <TabsContent value="schedule" className="mt-6">
                 <WeeklySchedule
                   weekStart={weekStart}

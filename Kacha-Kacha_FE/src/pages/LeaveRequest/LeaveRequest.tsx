@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { Calendar, Check, Clock, Download, Filter, Search, X } from "lucide-react"
 
@@ -9,10 +7,13 @@ import { Input } from "../../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Badge } from "../../components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
+import { PendingCard } from "../../components/PageUI/Leave/PendingCard"
+import { ApproveCard } from "../../components/PageUI/Leave/ApproveCard"
+import { RejectCard } from "../../components/PageUI/Leave/RejectCard"
+
 
 export default function LeaveRequest() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [departmentFilter, setDepartmentFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 8
@@ -49,42 +50,9 @@ export default function LeaveRequest() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <Clock className="mr-2 h-4 w-4 text-amber-500" />
-              <div className="text-2xl font-bold">{pendingCount}</div>
-              <div className="ml-2 text-sm text-muted-foreground">requests</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-green-500" />
-              <div className="text-2xl font-bold">{approvedCount}</div>
-              <div className="ml-2 text-sm text-muted-foreground">this month</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <X className="mr-2 h-4 w-4 text-red-500" />
-              <div className="text-2xl font-bold">{rejectedCount}</div>
-              <div className="ml-2 text-sm text-muted-foreground">this month</div>
-            </div>
-          </CardContent>
-        </Card>
+        <PendingCard pendingCount={9}/>
+        <ApproveCard ApproveCount={3}/>
+        <RejectCard RejectCount={1}/>
       </div>
 
       <Card>
