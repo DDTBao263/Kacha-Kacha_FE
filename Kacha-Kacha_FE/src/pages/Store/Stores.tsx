@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { storeService } from '../../services/store';
 import { Button } from '../../components/ui/button';
@@ -11,6 +11,7 @@ import {
   PaginationPrevious,
 } from '../../components/ui/pagination';
 import { AddStoreDialog } from './NewStore';
+import { debounce } from 'lodash';
 
 interface Store {
   id: number;
@@ -23,41 +24,63 @@ interface Store {
 const Stores = () => {
   const [stores, setStores] = useState<Store[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchStores = async (page: number, size: number = 10) => {
+  useEffect(() => {
+    // const fetchData = () => fetchStores(currentPage, 10, searchQuery);
+
+    fetchStores(currentPage, 10, searchQuery); // Gọi ngay khi component mount hoặc currentPage thay đổi
+
+    // window.addEventListener('refreshStores', fetchData);
+    // return () => window.removeEventListener('refreshStores', fetchData);
+  }, [currentPage, searchQuery]);
+
+  const fetchStores = async (
+    page: number,
+    size: number = 10,
+    keyword: string,
+  ) => {
     try {
-      const response = await storeService.getAllStores(page - 1, size);
-      const storesData =
-        response.data.data.content?.map((store: any, index: number) => ({
-          id: index + 1,
-          name: `Kacha-Kacha ${index + 1}`,
-          location: store.location,
-          phoneNumber: store.phoneNumber,
-          status: store.status,
-        })) || [];
+      const response = await storeService.getAllStores(page - 1, size, keyword);
+
+      const content = response.data.content || response.data.data?.content;
+      const totalPages =
+        response.data.totalPages || response.data.data?.totalPages || 1;
+
+      // Kiểm tra dữ liệu có tồn tại không
+      // if (!Array.isArray(content)) {
+      //   throw new Error('API không trả về content hợp lệ');
+      // }
+      const storesData = content.map((store: any) => ({
+        id: store.id,
+        name: `Kacha-Kacha ${store.location}`,
+        location: store.location,
+        phoneNumber: store.phoneNumber,
+        status: store.status,
+      }));
+
       setStores(storesData);
-      const total = response.data.data.totalPages || 1;
-      setTotalPages(total); // Assuming totalPages is available in the API response
+      setTotalPages(totalPages);
     } catch (error) {
       console.error('Failed to fetch stores:', error);
     }
   };
 
-  useEffect(() => {
-    const fetchData = () => fetchStores(currentPage, 10);
-
-    fetchData(); // Gọi ngay khi component mount hoặc currentPage thay đổi
-
-    window.addEventListener('refreshStores', fetchData);
-    return () => window.removeEventListener('refreshStores', fetchData);
-  }, [currentPage]);
-
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    setCurrentPage(page);
+  };
+
+  const debouncedSearch = useCallback(
+    debounce((keyword) => {
+      setSearchQuery(keyword);
+    }, 50),
+    [],
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    debouncedSearch(e.target.value);
   };
   // const handleAddStore = async (newStore: {
   //   location: string;
@@ -83,8 +106,9 @@ const Stores = () => {
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Search by name, location..."
+              placeholder="Search by location, phone number..."
               className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              onChange={handleSearchChange}
             />
           </div>
           <Button
@@ -98,9 +122,6 @@ const Stores = () => {
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b bg-gray-2 dark:bg-meta-4">
-                <th className="text-left py-4 px-4 font-medium text-slate-600">
-                  STT
-                </th>
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
                   NAME
                 </th>
@@ -121,7 +142,6 @@ const Stores = () => {
             <tbody>
               {stores.map((store) => (
                 <tr className="border-b hover:bg-slate-50" key={store.id}>
-                  <td className="py-4 px-4 text-slate-800">{store.id}</td>
                   <td className="py-4 px-4 text-slate-800">{store.name}</td>
                   <td className="py-4 px-4 text-slate-800">{store.location}</td>
                   <td className="py-4 px-4 text-slate-800">

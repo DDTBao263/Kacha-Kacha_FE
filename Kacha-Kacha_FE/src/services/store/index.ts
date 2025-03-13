@@ -1,13 +1,16 @@
 import { axiosPrivate } from '../../config/axios';
 
 export const storeService = {
-  getAllStores: async (page: number, size: number) => {
+  getAllStores: async (page: number, size: number, keyword: string) => {
     const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.get(`/api/restaurants?page=${page}&size=${size}`, {
-      headers: {
-        Authorization: `Bearer ${jwt_Token}`,
+    return axiosPrivate.get(
+      `/api/restaurants?page=${page}&size=${size}&keyword=${keyword}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+        },
       },
-    });
+    );
   },
 
   addStore: async (newStore: {
@@ -23,4 +26,12 @@ export const storeService = {
       },
     });
   },
+
+  // updateStore: async(updatedStore:{
+  //   storeId: store.storeId,
+  //     location,
+  //     phoneNumber,
+  //     status,
+  //     storeManagerId: storeManager,
+  // }),
 };

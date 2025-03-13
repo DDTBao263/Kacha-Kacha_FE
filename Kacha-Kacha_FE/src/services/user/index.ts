@@ -34,23 +34,17 @@ export const userService = {
       },
     });
   },
-  
-  getUserByID: async (
-    id: number,
-    role: string,
-  ) => {
+
+  getUserByID: async (id: number, role: string) => {
     const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.get(
-      `/api/users/${id}?role=${role}`,
-      {
-        headers: {
-          Authorization: `Bearer ${jwt_Token}`,
-        },
+    return axiosPrivate.get(`/api/users/${id}?role=${role}`, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token}`,
       },
-    );
+    });
   },
-  
-  updateUser: async (updatedUser: {
+
+  updateUser: async (updatedAccount: {
     userId: string;
     firstName: string;
     lastName: string;
@@ -58,12 +52,19 @@ export const userService = {
     role: string;
     status: string;
   }) => {
+    if (!updatedAccount.userId) {
+      throw new Error('User ID is required');
+    }
     const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.put(`/api/users/${updatedUser.userId}`, updatedUser, {
-      headers: {
-        Authorization: `Bearer ${jwt_Token}`,
-        'Content-Type': 'application/json',
+    return axiosPrivate.put(
+      `/api/users/${updatedAccount.userId}`,
+      updatedAccount,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
   },
 };

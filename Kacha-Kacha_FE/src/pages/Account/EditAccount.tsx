@@ -45,6 +45,8 @@ export function EditAccountDialog({
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (account) {
@@ -64,10 +66,15 @@ export function EditAccountDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !email || !role) return;
+    if (!account?.userId || !firstName || !lastName || !email || !role) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
 
     const updatedAccount = {
-      userId: account?.userId || '',
+      userId: account.userId,
       firstName,
       lastName,
       email,
@@ -78,8 +85,6 @@ export function EditAccountDialog({
 
     try {
       await userService.updateUser(updatedAccount);
-
-      // onSave(updatedAccount);
       onOpenChange(false);
       window.dispatchEvent(new Event('refreshAccounts'));
     } catch (error) {
@@ -153,10 +158,13 @@ export function EditAccountDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={loading}
             >
               Cancel
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
