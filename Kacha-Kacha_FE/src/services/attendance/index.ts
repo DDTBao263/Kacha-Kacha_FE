@@ -19,14 +19,42 @@ export const attendanceService = {
 
 
     //Tạo điểm danh
-
-
-
-
+    addAttendManual: async (newAttend: {
+        employeeId: number,
+        checkIn: string,
+        checkOut: string,
+        breakTime: number,
+        note: string,
+        date: string,
+      }) => {
+        const jwt_Token = localStorage.getItem('jwtToken');
+        return axiosPrivate.post(`/api/attendance`, newAttend, {
+          headers: {
+            Authorization: `Bearer ${jwt_Token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+    },
 
 
     //Update điểm danh hôm nay 
-
+    editTodayAttend: async (id: number, updatedAttend: {
+        employeeId: number,
+        checkIn: string,
+        checkOut: string,
+        breakTime: number,
+        note: string,
+        date: string,
+        shiftId: number,
+    }) => {
+        const jwt_Token = localStorage.getItem('jwtToken');
+        return axiosPrivate.put(`/api/attendance/today/${id}`, updatedAttend, {
+            headers: {
+                Authorization: `Bearer ${jwt_Token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+    },
    
 
 
