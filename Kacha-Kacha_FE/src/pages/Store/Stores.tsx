@@ -12,18 +12,22 @@ import {
 } from '../../components/ui/pagination';
 import { AddStoreDialog } from './NewStore';
 import { debounce } from 'lodash';
+import { UpdateStoreDialog } from './UpdateStore';
 
 interface Store {
-  id: number;
+  id: string;
   name: string;
   location: string;
   phoneNumber: string;
   status: string;
+  storeManagerId: string;
 }
 
 const Stores = () => {
   const [stores, setStores] = useState<Store[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -66,6 +70,13 @@ const Stores = () => {
     } catch (error) {
       console.error('Failed to fetch stores:', error);
     }
+  };
+
+  const handleEditClick = (store: Store) => {
+    // console.log('Selected account ID:', account.userId);
+    // console.log('Selected account:', account);
+    setSelectedStore(store);
+    setEditDialogOpen(true);
   };
 
   const handlePageChange = (page: number) => {
@@ -162,7 +173,7 @@ const Stores = () => {
                   </td>
                   <td className="py-4 px-4 flex justify-center">
                     <button
-                      // onClick={() => handleEditClick(account)}
+                      onClick={() => handleEditClick(store)}
                       className="hover:text-primary"
                     >
                       <svg
@@ -222,6 +233,12 @@ const Stores = () => {
       <AddStoreDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
+      />
+      <UpdateStoreDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        store={selectedStore} // Truyền tài khoản được chọn vào dialog
+        // onSave={handleUpdateAccount}
       />
     </>
   );
