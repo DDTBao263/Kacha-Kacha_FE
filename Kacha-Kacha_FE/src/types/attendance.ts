@@ -1,16 +1,10 @@
-export interface AttendanceData {
+export interface Attendance {
     id: number;
-    employee: string;
-    status: string;
-    clockIn: string;
-    clockOut: string;
-    totalHours: string;
-}
-  
-export interface AttendanceDialogProps {
-    open: boolean;
-    onClose: () => void;
-    onSubmit: (e: React.FormEvent) => void;
-    isEditMode: boolean;
-    selectedRecord: AttendanceData | null;
+    employeeId: string;
+    checkIn: string;
+    checkOut: string;
+    breakTime: string;
+    note: string;
+    date: string;
+    shiftId: string;
 }
