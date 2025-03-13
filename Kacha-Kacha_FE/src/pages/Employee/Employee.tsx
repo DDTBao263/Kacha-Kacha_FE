@@ -119,7 +119,7 @@ const Employee = () => {
                     {emp.phoneNumber}
                   </td>
                   <td className="py-4 px-4 text-slate-800">{emp.address}</td>
-                  <td className="py-4 px-40">
+                  <td className="py-4 px-4">
                     <p
                       className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
                         emp.status === 'ACTIVE'

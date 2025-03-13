@@ -18,7 +18,7 @@ interface UpdateStoreDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   store: {
-    storeId: string;
+    id: string;
     location: string;
     phoneNumber: string;
     status: string;
@@ -69,13 +69,7 @@ export function UpdateStoreDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !store?.storeId ||
-      !location ||
-      !phoneNumber ||
-      !status ||
-      !storeManager
-    ) {
+    if (!store?.id || !location || !phoneNumber || !status || !storeManager) {
       setError('Please fill in all fields.');
       return;
     }
@@ -83,7 +77,7 @@ export function UpdateStoreDialog({
     setError(null);
 
     const updatedStore = {
-      storeId: store.storeId,
+      storeId: store.id,
       location,
       phoneNumber,
       status,
