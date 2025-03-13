@@ -46,10 +46,10 @@ const Account = () => {
         status,
         keyword,
       );
-      console.log('API Response:', response);
+      // console.log('API Response:', response);
       const users =
         response.data.data.content?.map((user: any) => ({
-          id: user.userId,
+          userId: user.userId,
           firstName: user.firstName,
           lastName: user.lastName,
           name: `${user.lastName} ${user.firstName}`,
@@ -71,8 +71,8 @@ const Account = () => {
   };
 
   const handleEditClick = (account: ACCOUNT) => {
-    console.log('Selected account ID:', account.userId);
-    console.log('Selected account:', account);
+    // console.log('Selected account ID:', account.userId);
+    // console.log('Selected account:', account);
     setSelectedAccount(account);
     setEditDialogOpen(true);
   };
