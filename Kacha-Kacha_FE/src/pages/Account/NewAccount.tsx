@@ -36,9 +36,8 @@ interface AddAccountDialogProps {
 
 export function AddAccountDialog({
   open,
-  onOpenChange,
-} // onAddAccount,
-: AddAccountDialogProps) {
+  onOpenChange, // onAddAccount,
+}: AddAccountDialogProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -136,7 +135,6 @@ export function AddAccountDialog({
                 <SelectItem value="Restaurant Manager">
                   RESTAURANT_MANAGER
                 </SelectItem>
-                <SelectItem value="Draft">DRAFT</SelectItem>
               </SelectContent>
             </Select>
           </div>

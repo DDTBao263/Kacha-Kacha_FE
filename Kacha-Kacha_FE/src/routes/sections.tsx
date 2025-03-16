@@ -15,11 +15,15 @@ const SignIn = lazy(() => import('../pages/Authentication/SignIn'));
 const AdminDashboard = lazy(() => import('../pages/Dashboard/AdminDashboard'));
 const Store = lazy(() => import('../pages/Store/Stores'));
 const Account = lazy(() => import('../pages/Account/Account'));
+const Employee = lazy(() => import('../pages/Employee/Employee'));
 
 // Restaurant Manager
 const RestaurantDash = lazy(() => import('../pages/Dashboard/RestaurantDash'));
-const Employee = lazy(() => import('../pages/Employee/Employee'));
 const Reports = lazy(() => import('../pages/Report/Report'));
+const RestaurantManagement = lazy(
+  () => import('../pages/Store/RestaurantManagement'),
+);
+const EmpManagement = lazy(() => import('../pages/Employee/EmpManagement'));
 
 // Store Manager
 const StoreDash = lazy(() => import('../pages/Dashboard/StoreDash'));
@@ -43,9 +47,9 @@ const RedirectBasedOnUserRole = () => {
     case 'ADMIN':
       return <Navigate to="/admin/admindash" replace />;
     case 'RESTAURANT_MANAGER':
-      return <Navigate to="/restaurant/resdash" replace />;
+      return <Navigate to="/restaurantManager/resdash" replace />;
     case 'STORE_MANAGER':
-      return <Navigate to="/storemanager/storedash" replace />;
+      return <Navigate to="/storeManager/storedash" replace />;
     default:
       return <Navigate to="/auth/signin" replace />;
   }
@@ -62,7 +66,6 @@ export const authRoutes: RouteObject[] = [
     children: [{ path: 'signin', element: <SignIn /> }],
   },
 ];
-
 
 export const appRoutes: RouteObject[] = [
   {
@@ -81,19 +84,21 @@ export const appRoutes: RouteObject[] = [
           { index: true, path: 'admindash', element: <AdminDashboard /> },
           { path: 'store', element: <Store /> },
           { path: 'account', element: <Account /> },
+          { path: 'employee', element: <Employee /> },
         ],
       },
       {
-        path: 'restaurant',
+        path: 'restaurantManager',
         element: <PrivateRoute allowedUserTypes={['RESTAURANT_MANAGER']} />,
         children: [
           { index: true, path: 'resdash', element: <RestaurantDash /> },
-          { path: 'employee', element: <Employee /> },
+          { path: 'restaurants', element: <RestaurantManagement /> },
           { path: 'reports', element: <Reports /> },
+          { path: 'restaurants/:id/employees', element: <EmpManagement /> },
         ],
       },
       {
-        path: 'storemanager',
+        path: 'storeManager',
         element: <PrivateRoute allowedUserTypes={['STORE_MANAGER']} />,
         children: [
           { index: true, path: 'storedash', element: <StoreDash /> },
@@ -106,7 +111,6 @@ export const appRoutes: RouteObject[] = [
     ],
   },
 ];
-
 
 export const allRoutes: RouteObject[] = [
   ...authRoutes,
