@@ -13,6 +13,15 @@ export const storeService = {
     );
   },
 
+  getStoresBySearch: async (keyword: string) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(`/api/restaurants?keyword=${keyword}`, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token}`,
+      },
+    });
+  },
+
   addStore: async (newStore: {
     location: string;
     phoneNumber: string;

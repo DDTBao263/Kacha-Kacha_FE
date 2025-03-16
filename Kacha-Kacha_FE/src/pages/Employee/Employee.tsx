@@ -79,12 +79,12 @@ const Employee = () => {
               onChange={handleSearchChange}
             />
           </div>
-          {/* <Button
+          <Button
             // onClick={() => setIsAddDialogOpen(true)}
             className="ml-auto py-6 px-10"
           >
-            Add Store
-          </Button> */}
+            Add Employee Account
+          </Button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
@@ -105,7 +105,7 @@ const Employee = () => {
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
                   STATUS
                 </th>
-                <th className="text-left py-4 px-4 font-medium text-slate-600">
+                <th className="text-center py-4 px-4 font-medium text-slate-600">
                   VIEW
                 </th>
               </tr>
