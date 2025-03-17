@@ -12,4 +12,13 @@ export const employeeService = {
       },
     );
   },
+
+  getEmpByRestaurantId: async (restaurantId: number) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(`/api/employees?restaurantId=${restaurantId}`, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token},`,
+      },
+    });
+  },
 };
