@@ -13,6 +13,17 @@ export const employeeService = {
     );
   },
 
+  getDetailEmployee: async (id: number) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(`/api/employees/${id}`, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token},`,
+      },
+    });
+  },
+
+
+
   getEmpByRestaurantId: async (restaurantId: number) => {
     const jwt_Token = localStorage.getItem('jwtToken');
     return axiosPrivate.get(`/api/employees?restaurantId=${restaurantId}`, {

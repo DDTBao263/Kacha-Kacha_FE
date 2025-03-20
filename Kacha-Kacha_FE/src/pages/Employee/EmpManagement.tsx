@@ -68,7 +68,7 @@ const EmpManagement = () => {
 
       const employee =
         response.data.data.content?.map((employee: any) => ({
-          employeeId: employee.id,
+          employeeId: employee.employeeId,
           name: employee.name,
           email: employee.email,
           phoneNumber: employee.phoneNumber || '-',
@@ -83,6 +83,16 @@ const EmpManagement = () => {
 
   const handleBackToRestaurants = () => {
     navigate(`/restaurantManager/restaurants`);
+  };
+
+
+  const handleViewClick = (idProfileEmployees: number) => {
+    if (restaurant && restaurant.id) {
+      // console.log("restaurant", restaurant.id);
+      navigate(`/restaurantManager/restaurants/${restaurant.id}/employees/${idProfileEmployees}/profileemployees`);
+    } else {
+      console.error("Restaurant is undefined or missing id.");
+    }
   };
   return (
     <>
@@ -118,12 +128,12 @@ const EmpManagement = () => {
                   <div>
                     <p className="font-medium">
                       Name:{' '}
-                      {restaurant ? restaurant.storeManager.name : 'Loading...'}
+                      {restaurant ? restaurant.storeManager?.name : 'Loading...'}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Email:{' '}
                       {restaurant
-                        ? restaurant.storeManager.email
+                        ? restaurant.storeManager?.email
                         : 'Loading...'}
                     </p>
                   </div>
@@ -173,8 +183,9 @@ const EmpManagement = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
+
                         <button
-                          // onClick={() => handleEditClick(account)}
+                          onClick={() => handleViewClick(employee.employeeId)}
                           className="hover:text-primary"
                         >
                           <svg
