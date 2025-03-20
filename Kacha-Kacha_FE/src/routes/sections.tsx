@@ -24,7 +24,7 @@ const RestaurantManagement = lazy(
   () => import('../pages/Store/RestaurantManagement'),
 );
 const EmpManagement = lazy(() => import('../pages/Employee/EmpManagement'));
-
+const ProfileEmployyee = lazy(() => import("../pages/Profile/ProfileEmployyee"))
 // Store Manager
 const StoreDash = lazy(() => import('../pages/Dashboard/StoreDash'));
 const Attendance = lazy(() => import('../pages/Attendance/Attendance'));
@@ -94,7 +94,14 @@ export const appRoutes: RouteObject[] = [
           { index: true, path: 'resdash', element: <RestaurantDash /> },
           { path: 'restaurants', element: <RestaurantManagement /> },
           { path: 'reports', element: <Reports /> },
-          { path: 'restaurants/:id/employees', element: <EmpManagement /> },
+          {
+            path: 'restaurants/:id/employees',
+            element: <EmpManagement />,
+          },
+          {
+            path: 'restaurants/:id/employees/:idprofileemployee/profileemployees', 
+            element: <ProfileEmployyee />,
+          },
         ],
       },
       {

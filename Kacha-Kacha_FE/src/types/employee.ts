@@ -5,4 +5,5 @@ export type EMPLOYEE = {
   phoneNumber: string;
   address: string;
   status: string;
+  role: string;
 };
