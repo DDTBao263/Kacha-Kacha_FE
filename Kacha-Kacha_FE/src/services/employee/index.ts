@@ -22,13 +22,25 @@ export const employeeService = {
     });
   },
 
-
-
   getEmpByRestaurantId: async (restaurantId: number) => {
     const jwt_Token = localStorage.getItem('jwtToken');
     return axiosPrivate.get(`/api/employees?restaurantId=${restaurantId}`, {
       headers: {
         Authorization: `Bearer ${jwt_Token},`,
+      },
+    });
+  },
+
+  AddEmployee: async (newEmployee: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  }) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.post('/api/employees', newEmployee, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token}`,
+        'Content-Type': 'application/json',
       },
     });
   },
