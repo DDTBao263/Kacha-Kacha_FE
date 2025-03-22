@@ -90,7 +90,7 @@ export default function ProfileEmployyee() {
   // console.log('employeeDetail', employeeDetail);
 
   const handleBackToDetailRestaurants = () => {
-    navigate(`/restaurantManager/restaurants/${id}`);
+    navigate(`/restaurantManager/restaurants/${id}/employees`);
   };
   return (
     <div className="container mx-auto py-6 space-y-8">

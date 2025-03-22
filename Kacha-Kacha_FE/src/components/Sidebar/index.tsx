@@ -45,6 +45,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       { name: 'Dashboard', path: '/restaurantManager/resdash' },
       { name: 'Restaurant Management', path: '/restaurantManager/restaurants' },
       { name: 'Reports', path: '/restaurantManager/reports' },
+      { name: 'Employee', path: '/restaurantManager/employee'}
     ],
     STORE_MANAGER: [
       { name: 'Dashboard', path: '/storeManager/storedash' },
