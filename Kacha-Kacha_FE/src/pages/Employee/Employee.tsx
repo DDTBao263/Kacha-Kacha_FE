@@ -12,9 +12,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '../../components/ui/pagination';
+import { AddEmpAccountDialog } from './NewEmpAccount';
 
 const Employee = () => {
   const [employees, setEmployees] = useState<EMPLOYEE[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isOptionSelected, setIsOptionSelected] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,7 +82,7 @@ const Employee = () => {
             />
           </div>
           <Button
-            // onClick={() => setIsAddDialogOpen(true)}
+            onClick={() => setIsAddDialogOpen(true)}
             className="ml-auto py-6 px-10"
           >
             Add Employee Account
@@ -191,6 +193,11 @@ const Employee = () => {
           </PaginationContent>
         </Pagination>
       </div>
+      <AddEmpAccountDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        // onAddEmployee={employees}
+      />
     </>
   );
 };
