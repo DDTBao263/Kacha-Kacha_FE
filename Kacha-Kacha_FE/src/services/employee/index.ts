@@ -44,4 +44,13 @@ export const employeeService = {
       },
     });
   },
+    
+  UpdateEmpById: async (data: any) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.put(`/api/employees/${data.id}`, data, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token},`,
+      },
+    });
+  },
 };
