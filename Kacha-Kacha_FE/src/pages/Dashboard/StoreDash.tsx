@@ -72,7 +72,7 @@ const StoreDash = () => {
           {/* Overview */}
           {cardData && (
             <>
-              <PresentCard presentCount={cardData?.numberOfOnTime ?? 0} totalEmployees={cardData?.numberOfEmployees ?? 0} />
+              <PresentCard presentCount={cardData?.numberOfEmployeesOnShift ?? 0} totalEmployees={cardData?.numberOfEmployees ?? 0} />
               <AbsentCard absentCount={cardData?.numberOfAbsent ?? 0} totalEmployees={cardData?.numberOfEmployees ?? 0} />
               <LateCard lateCount={cardData?.numberOfLateAttendances ?? 0} />
             </>

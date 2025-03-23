@@ -1,10 +1,13 @@
 export interface Attendance {
     id: number;
-    employeeId: string;
+    employeeId: number;
+    avatar: string;
+    email: string;
     checkIn: string;
     checkOut: string;
     breakTime: string;
+    status: string;
     note: string;
     date: string;
-    shiftId: string;
+    shiftId: number;
 }

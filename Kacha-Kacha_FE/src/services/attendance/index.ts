@@ -1,68 +1,63 @@
 import { axiosPrivate } from '../../config/axios';
 
-export const attendanceService = {
-    // lấy danh sách điểm danh trong ngày hôm nay của nhà hàng 
-    getTodayAttend: async (
-        page: number,
-        limit: number,
-        restaurantId: number,
-        keyword?: string
-    ) => {
-        const jwt_Token = localStorage.getItem('jwtToken');
-        const url = `/api/attendance?page=${page}&limit=${limit}&restaurantId=${restaurantId}` +
-            (keyword ? `&search=${encodeURIComponent(keyword)}` : '');
-
-        return axiosPrivate.get(url, {
-            headers: { Authorization: `Bearer ${jwt_Token}` },
-        });
-    },
-
-
-    //Tạo điểm danh
-    addAttendManual: async (newAttend: {
-        employeeId: number,
-        checkIn: string,
-        checkOut: string,
-        breakTime: number,
-        note: string,
-        date: string,
-      }) => {
-        const jwt_Token = localStorage.getItem('jwtToken');
-        return axiosPrivate.post(`/api/attendance`, newAttend, {
-          headers: {
-            Authorization: `Bearer ${jwt_Token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-    },
-
-
-    //Update điểm danh hôm nay 
-    editTodayAttend: async (id: number, updatedAttend: {
-        employeeId: number,
-        checkIn: string,
-        checkOut: string,
-        breakTime: number,
-        note: string,
-        date: string,
-        shiftId: number,
-    }) => {
-        const jwt_Token = localStorage.getItem('jwtToken');
-        return axiosPrivate.put(`/api/attendance/today/${id}`, updatedAttend, {
-            headers: {
-                Authorization: `Bearer ${jwt_Token}`,
-                'Content-Type': 'application/json',
-            },
-        });
-    },
-   
-
-
-
-
-
-    
-
-
-
+interface AttendancePayload {
+    employeeId: number;
+    checkIn: string | null;
+    checkOut: string | null;
+    breakTime: number;
+    note: string | null;
+    date: string;
+    shiftId: number;
 }
+
+export const attendanceService = {
+    getTodayAttendance: (restaurantId: number, page: number, limit: number) => {
+        const jwt_Token = localStorage.getItem('jwtToken');
+        return axiosPrivate.get(
+            `/api/attendance/today/restaurant/${restaurantId}?page=${page}&limit=${limit}&restaurantId=${restaurantId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${jwt_Token}`,
+                },
+            }
+        );
+    },
+
+    getTodayAttendanceByEmployeeId: (employeeId: number) => {
+        const jwt_Token = localStorage.getItem('jwtToken');
+        return axiosPrivate.get(
+            `/api/attendance/today/employee/${employeeId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${jwt_Token}`,
+                },
+            }
+        );
+    },
+
+    addAttendManual: (attendance: AttendancePayload) => {
+        const jwt_Token = localStorage.getItem('jwtToken');
+        return axiosPrivate.post(
+            '/api/attendance/manual',
+            attendance,
+            {
+                headers: {
+                    Authorization: `Bearer ${jwt_Token}`,
+                },
+            }
+        );
+    },
+
+    editTodayAttend: (id: number, attendance: AttendancePayload) => {
+        const jwt_Token = localStorage.getItem('jwtToken');
+        return axiosPrivate.put(
+            `/api/attendance/${id}`,
+            attendance,
+            {
+                headers: {
+                    Authorization: `Bearer ${jwt_Token}`,
+                },
+            }
+        );
+    },
+};
