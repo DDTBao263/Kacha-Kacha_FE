@@ -40,7 +40,7 @@ export function StaffCoverage({ data }: StaffCoverageProps) {
                                 <Users className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-sm font-medium">{day.numberOfEmployeeOnShift}/{day.totalEmployeeOfRestaurant}</span>
                             </div>
-                            <Badge variant={getCoverageVariant(day.percent)}>{day.percent}%</Badge>
+                            <Badge variant={getCoverageVariant(day.percent)}>{day.percent.toFixed(0)}%</Badge>
                         </div>
                     ))}
                 </div>

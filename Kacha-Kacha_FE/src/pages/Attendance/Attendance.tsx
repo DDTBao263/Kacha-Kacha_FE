@@ -15,13 +15,12 @@ import {
 } from '../../components/ui/pagination';
 import { attendanceService } from '../../services/attendance';
 import { userService } from '../../services/user';
-import { debounce } from 'lodash';
 import type { Attendance } from "../../types/attendance"
+
 const Attendance = () => {
   const user = useSelector((state: RootState) => state.auth.user);
-  
+
   const [attendances, setAttendances] = useState<Attendance[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
@@ -48,63 +47,73 @@ const Attendance = () => {
     fetchRestaurantId();
   }, [user]);
 
-  useEffect(() => {
-    if (restaurantId !== null) {
-      fetchAttendances(currentPage, 10, searchQuery);
-    }
-  }, [currentPage, searchQuery, restaurantId]);
-
-  const fetchAttendances = async (page: number, size: number = 10, keyword: string) => {
+  const fetchAttendances = useCallback(async (
+    page: number,
+    size: number = 10
+  ) => {
     try {
       if (restaurantId === null) {
         throw new Error("restaurantId is not set");
       }
-      const response = await attendanceService.getTodayAttend(
-        page - 1,
-        size,
-        restaurantId,
-        keyword,
-      );
+
+      const response = await attendanceService.getTodayAttendance(restaurantId, page - 1, size);
       console.log('API Response:', response);
-      const attendances =
-        response.data.content?.map((attendance: any) => ({
-          id: attendance.id,
+
+      if (response.data?.content) {
+        const attendances = response.data.content.map((attendance: any) => ({
+          id: attendance.attendanceId,
           employeeId: attendance.employeeId,
-          checkIn: attendance.checkIn,
-          checkOut: attendance.checkOut,
-          breakTime: attendance.breakTime,
-          note: attendance.note,
+          avatar: attendance.avatar || '',
+          email: attendance.email,
+          checkIn: attendance.checkInTime,
+          checkOut: attendance.checkOutTime,
+          breakTime: attendance.breakDurianTime,
+          status: attendance.status || 'PENDING',
           date: attendance.date,
-          shiftId: attendance.shiftId,
-        })) || [];
-      setAttendances(attendances);
-      const total = response.data.totalPages || 1;
-      setTotalPages(total);
+          note: attendance.note || '',
+          shiftId: attendance.shiftId || 3001
+        }));
+
+        setAttendances(attendances);
+        setTotalPages(response.data.totalPages || 1);
+      } else {
+        setAttendances([]);
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error('Failed to fetch attendances:', error);
+      setAttendances([]);
+      setTotalPages(1);
     }
-  };
+  }, [restaurantId]);
+
+  useEffect(() => {
+    if (restaurantId !== null) {
+      fetchAttendances(currentPage, 10);
+    }
+  }, [currentPage, restaurantId, fetchAttendances]);
 
   const handleEditClick = (attendance: any) => {
-    console.log('Selected attendance ID:', attendance.id);
-    console.log('Selected attendance:', attendance);
-    setSelectedAttendance(attendance);
+    // Format time values for the edit form
+    const formatTimeForInput = (dateTimeStr: string) => {
+      if (!dateTimeStr) return '';
+      const date = new Date(dateTimeStr);
+      return date.toTimeString().slice(0, 5); // Get HH:mm format
+    };
+
+    const formattedAttendance = {
+      ...attendance,
+      checkIn: formatTimeForInput(attendance.checkIn),
+      checkOut: formatTimeForInput(attendance.checkOut),
+      date: new Date(attendance.date).toISOString().split('T')[0], // Format date as YYYY-MM-DD
+    };
+
+    setSelectedAttendance(formattedAttendance);
     setEditDialogOpen(true);
   };
 
-  const handlePageChange = (page : number ) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const debouncedSearch = useCallback(
-    debounce((keyword) => {
-      setSearchQuery(keyword);
-    }, 50),
-    [],
-  );
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    debouncedSearch(e.target.value);
   };
 
   return (
@@ -113,12 +122,11 @@ const Attendance = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
-            <input
+            {/* <input
               type="text"
               placeholder="Search by employee ID, note..."
               className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-              onChange={handleSearchChange}
-            />
+            /> */}
           </div>
           <Button
             onClick={() => setIsAddDialogOpen(true)}
@@ -135,6 +143,9 @@ const Attendance = () => {
                   EMPLOYEE ID
                 </th>
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
+                  EMAIL
+                </th>
+                <th className="text-left py-4 px-4 font-medium text-slate-600">
                   CHECK IN
                 </th>
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
@@ -144,13 +155,13 @@ const Attendance = () => {
                   BREAK TIME
                 </th>
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
-                  NOTE
+                  STATUS
                 </th>
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
                   DATE
                 </th>
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
-                  SHIFT ID
+                  NOTE
                 </th>
                 <th className="text-left py-4 px-4 font-medium text-slate-600">
                   ACTION
@@ -161,12 +172,36 @@ const Attendance = () => {
               {attendances.map((attendance, key) => (
                 <tr className="border-b hover:bg-slate-50" key={key}>
                   <td className="py-4 px-4 text-slate-800">{attendance.employeeId}</td>
-                  <td className="py-4 px-4 text-slate-800">{attendance.checkIn}</td>
-                  <td className="py-4 px-4 text-slate-800">{attendance.checkOut}</td>
-                  <td className="py-4 px-4 text-slate-800">{attendance.breakTime}</td>
-                  <td className="py-4 px-4 text-slate-800">{attendance.note}</td>
-                  <td className="py-4 px-4 text-slate-800">{attendance.date}</td>
-                  <td className="py-4 px-4 text-slate-800">{attendance.shiftId}</td>
+                  <td className="py-4 px-4 text-slate-800">{attendance.email}</td>
+                  <td className="py-4 px-4 text-slate-800">
+                    {attendance.checkIn ? new Date(attendance.checkIn).toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true
+                    }) : '-'}
+                  </td>
+                  <td className="py-4 px-4 text-slate-800">
+                    {attendance.checkOut ? new Date(attendance.checkOut).toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true
+                    }) : '-'}
+                  </td>
+                  <td className="py-4 px-4 text-slate-800">
+                    {attendance.breakTime ? new Date(attendance.breakTime).toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true
+                    }) : '-'}
+                  </td>
+                  <td className="py-4 px-4 text-slate-800">{attendance.status}</td>
+                  <td className="py-4 px-4 text-slate-800">
+                    {new Date(attendance.date).toLocaleDateString('vi-VN')}
+                  </td>
+                  <td className="py-4 px-4 text-slate-800">{attendance.note || '-'}</td>
                   <td className="py-4 px-4 flex justify-center">
                     <button
                       onClick={() => handleEditClick(attendance)}
@@ -229,11 +264,13 @@ const Attendance = () => {
       <AddAttendDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
+        onSuccess={() => fetchAttendances(currentPage, 10)}
       />
       <EditAttendDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         attendance={selectedAttendance}
+        onSuccess={() => fetchAttendances(currentPage, 10)}
       />
     </>
   );
