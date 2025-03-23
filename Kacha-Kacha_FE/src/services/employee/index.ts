@@ -22,19 +22,32 @@ export const employeeService = {
     });
   },
 
-  UpdateEmpById: async (data: any) => {
+  getEmpByRestaurantId: async (restaurantId: number) => {
     const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.put(`/api/employees/${data.id}`, data, {
+    return axiosPrivate.get(`/api/employees?restaurantId=${restaurantId}`, {
       headers: {
         Authorization: `Bearer ${jwt_Token},`,
       },
     });
   },
 
-
-  getEmpByRestaurantId: async (restaurantId: number) => {
+  AddEmployee: async (newEmployee: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  }) => {
     const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.get(`/api/employees?restaurantId=${restaurantId}`, {
+    return axiosPrivate.post('/api/employees', newEmployee, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  },
+    
+  UpdateEmpById: async (data: any) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.put(`/api/employees/${data.id}`, data, {
       headers: {
         Authorization: `Bearer ${jwt_Token},`,
       },
