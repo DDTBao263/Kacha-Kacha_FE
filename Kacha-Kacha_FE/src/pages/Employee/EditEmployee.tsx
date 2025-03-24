@@ -12,6 +12,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { employeeService } from '../../services/employee/index';
+import { Store } from '../../types/store';
 
 interface EditAccountDialogProps {
   open: boolean;
@@ -25,38 +26,35 @@ interface EditAccountDialogProps {
     address: string;
     phone: string;
     status: string;
-    restaurantId: number;
-
+    role: string;
+    restaurantId: string;
+    restaurantLocation: string;
   } | null;
-  // onSave: (updatedAccount: {
-  //   id: string;
-  //   firstName: string;
-  //   lastName: string;
-  //   name: string;
-  //   email: string;
-  //   role: string;
-  //   status: string;
-  // }) => void;
+  restaurant: Store[];
 }
 
 export function EditEmployeeDiaLog({
   open,
   onOpenChange,
-  account, // onSave,
+  account,
+  restaurant,
 }: EditAccountDialogProps) {
-  const [firstName, setFirstName] = useState('Fake firstName');
+  const [firstName, setFirstName] = useState('');
   const [name, setName] = useState('');
-  const [lastName, setLastName] = useState('Fake lastName');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState('');
-  const [restaurantId, setRestaurantId] = useState<number>(0);
+  const [restaurantId, setRestaurantId] = useState('');
+  const [restaurantLocation, setRestaurantLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // console.log('account', account);
+  // console.log("restaurant", restaurant);
+
   useEffect(() => {
-    console.log('Account data:', account);
     if (account) {
       setFirstName(account.firstName || '');
       setName(account.name || '');
@@ -65,7 +63,8 @@ export function EditEmployeeDiaLog({
       setPhone(account.phone || '');
       setAddress(account.address || '');
       setStatus(account.status || '');
-      setRestaurantId(account.restaurantId || 0);  
+      setRestaurantId(account.restaurantId || '');
+      setRestaurantLocation(account.restaurantLocation || '');
     } else {
       setFirstName('');
       setName('');
@@ -74,42 +73,43 @@ export function EditEmployeeDiaLog({
       setPhone('');
       setAddress('');
       setStatus('');
-      setRestaurantId(0);
+      setRestaurantId('');
+      setRestaurantLocation('');
     }
   }, [account]);
-  
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log('account', account);
-
     e.preventDefault();
     if (!account?.employeeId || !firstName || !lastName || !email) {
-      console.log(123);
       setError('Please fill in all fields.');
       return;
     }
-
-    setLoading(true);
+    // setLoading(true);
     setError(null);
-
     const updatedAccount = {
-      id: account.employeeId,
       firstName,
       lastName,
-      name,
       email,
       phoneNumber: phone,
       address,
+      restaurantId: Number(restaurantId),
       status,
-      restaurantId
     };
-    console.log('Updated account employee:', updatedAccount);
+
+    console.log('updatedAccount', updatedAccount);
 
     try {
-      await employeeService.UpdateEmpById(updatedAccount);
-      onOpenChange(false);
-      window.dispatchEvent(new Event('refreshAccounts'));
+      const res = await employeeService.UpdateEmpById(
+        updatedAccount,
+        Number(account.employeeId),
+      );
+      // console.log("res", res)
+      if(res.status ==200){
+        alert("Update SuccessFully")
+        setLoading(false);
+        onOpenChange(false);
+        window.dispatchEvent(new Event('refreshAccounts'));
+      }
     } catch (error) {
       console.error('Failed to update account:', error);
     }
@@ -117,25 +117,18 @@ export function EditEmployeeDiaLog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[500px] overflow-y-auto py-2">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Edit Account</DialogTitle>
+          <DialogTitle>Edit Employee</DialogTitle>
           <DialogDescription>
-            Modify account details and save changes.
+            Edit employee information and save changes.
           </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-2 py-2">
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 py-4">
           {/* <div className="space-y-2">
-            <Label htmlFor="firstName">Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+            <Label htmlFor="name">Name</Label>
+            <Input id="name" value={name} disabled />
           </div> */}
-
           <div className="space-y-2">
             <Label htmlFor="firstName">First Name</Label>
             <Input
@@ -145,7 +138,6 @@ export function EditEmployeeDiaLog({
               required
             />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="lastName">Last Name</Label>
             <Input
@@ -155,12 +147,10 @@ export function EditEmployeeDiaLog({
               required
             />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" value={email} disabled />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>
             <Input
@@ -169,7 +159,6 @@ export function EditEmployeeDiaLog({
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="address">Address</Label>
             <Input
@@ -178,32 +167,50 @@ export function EditEmployeeDiaLog({
               onChange={(e) => setAddress(e.target.value)}
             />
           </div>
+          <div className="space-y-2 col-span-2">
+            <Label htmlFor="status">Restaurant</Label>
+            <select
+              id="restaurant"
+              value={restaurantLocation}
+              onChange={(e) => {
+                // console.log("e.target.value", e.target.value);
+                
+                const restaurantName: Store | undefined = restaurant.find(
+                  (r: Store) => r.id == Number(e.target.value)
+                );
+                // console.log("restaurantName", restaurantName);
+                setRestaurantLocation(restaurantName.location)
+                setRestaurantId(e.target.value);
+              }}
+              required
+              className="w-full rounded-lg border py-2 px-4"
+            >
+              <option value={restaurantId}>{restaurantLocation}</option>
+              {restaurant &&
+                restaurant.map((val: Store) => (
+                  <option key={val.id} value={val.id}>
+                    {val.location}
+                  </option>
+                ))}
+            </select>
+          </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 col-span-2">
             <Label htmlFor="status">Status</Label>
             <select
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               required
-              className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              className="w-full rounded-lg border py-2 px-4"
             >
+              <option value="ACTIVE">ACTIVE</option>
               <option value="ACTIVE">ACTIVE</option>
               <option value="INACTIVE">INACTIVE</option>
               <option value="SUSPENDED">SUSPENDED</option>
             </select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="restaurantId">Restaurant</Label>
-            <Input
-              id="restaurantId"
-              type="number"
-              value={restaurantId}
-              onChange={(e) => setRestaurantId(Number(e.target.value))}
-            />
-          </div>
-
-          <DialogFooter className="pt-4">
+          <div className="col-span-2 flex justify-end space-x-2">
             <Button
               type="button"
               variant="outline"
@@ -215,7 +222,7 @@ export function EditEmployeeDiaLog({
             <Button type="submit" disabled={loading}>
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
