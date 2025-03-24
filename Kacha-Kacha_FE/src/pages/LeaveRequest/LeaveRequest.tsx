@@ -1,409 +1,286 @@
-import { useState } from "react"
-import { Calendar, Check, Clock, Download, Filter, Search, X } from "lucide-react"
+import { useEffect, useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
+import { debounce } from 'lodash';
+import { userService } from '../../services/user';
+import { leaveService } from '../../services/leave';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
+import { Check, X } from 'lucide-react';
+import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
+import { alert } from '../../utils/Alert';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '../../components/ui/pagination';
 
-import { Button } from "../../components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
-import { Badge } from "../../components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
-import { PendingCard } from "../../components/PageUI/Leave/PendingCard"
-import { ApproveCard } from "../../components/PageUI/Leave/ApproveCard"
-import { RejectCard } from "../../components/PageUI/Leave/RejectCard"
+interface LeaveRequest {
+  leaveRequestId: number;
+  employeeId: number;
+  applicationId: number;
+  description: string | null;
+  leaveType: string;
+  startDate: string;
+  endDate: string | null;
+  time: string | null;
+  reason: string | null;
+  status: string;
+}
 
+const LeaveRequest = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [restaurantId, setRestaurantId] = useState<number | null>(null);
 
-export default function LeaveRequest() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 8
+  useEffect(() => {
+    const fetchRestaurantId = async () => {
+      try {
+        if (!user) {
+          throw new Error("User is not authenticated");
+        }
+        const userResponse = await userService.getUserByID(user.id, 'STORE_MANAGER');
+        if (!userResponse?.data?.data?.restaurantId) {
+          throw new Error("restaurantId is missing");
+        }
+        setRestaurantId(userResponse.data.data.restaurantId);
+      } catch (error) {
+        console.error('Failed to fetch restaurant ID:', error);
+      }
+    };
 
-  // Filter leave request data based on search query, department, and status
-  const filteredRequests = extendedLeaveRequestData.filter((request) => {
-    const matchesSearch = request.employee.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || request.status === statusFilter
-    return matchesSearch  && matchesStatus
-  })
+    fetchRestaurantId();
+  }, [user]);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage)
-  const paginatedRequests = filteredRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  useEffect(() => {
+    if (restaurantId !== null) {
+      fetchLeaveRequests(currentPage, 10, searchQuery);
+    }
+  }, [currentPage, searchQuery, statusFilter, restaurantId]);
 
-  // Calculate summary statistics
-  const pendingCount = extendedLeaveRequestData.filter((request) => request.status === "Pending").length
-  const approvedCount = extendedLeaveRequestData.filter((request) => request.status === "Approved").length
-  const rejectedCount = extendedLeaveRequestData.filter((request) => request.status === "Rejected").length
+  const fetchLeaveRequests = async (page: number, size: number = 10, keyword: string) => {
+    try {
+      if (restaurantId === null) {
+        throw new Error("restaurantId is not set");
+      }
+      const response = await leaveService.getLeavesByRestaurant(
+        page - 1,
+        size,
+        restaurantId,
+        keyword,
+        statusFilter
+      );
+      setLeaveRequests(response.data.data.content || []);
+      setTotalPages(response.data.data.totalPages || 1);
+    } catch (error) {
+      console.error('Failed to fetch leave requests:', error);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const debouncedSearch = useCallback(
+    debounce((keyword) => {
+      setSearchQuery(keyword);
+      setCurrentPage(1);
+    }, 500),
+    [],
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    debouncedSearch(e.target.value);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleApprove = async (leaveRequestId: number) => {
+    try {
+      const response = await leaveService.approveLeave(leaveRequestId);
+      if (response.data.status === 0) {
+        await alert.success("Đã duyệt đơn xin nghỉ");
+        fetchLeaveRequests(currentPage, 10, searchQuery);
+      } else {
+        await alert.error(response.data.desc || "Có lỗi xảy ra khi duyệt đơn xin nghỉ");
+      }
+    } catch (error) {
+      console.error('Error approving leave:', error);
+      await alert.error("Có lỗi xảy ra khi duyệt đơn xin nghỉ");
+    }
+  };
+
+  const handleReject = async (leaveRequestId: number) => {
+    try {
+      const response = await leaveService.rejectLeave(leaveRequestId);
+      if (response.data.status === 0) {
+        await alert.success("Đã từ chối đơn xin nghỉ");
+        fetchLeaveRequests(currentPage, 10, searchQuery);
+      } else {
+        await alert.error(response.data.desc || "Có lỗi xảy ra khi từ chối đơn xin nghỉ");
+      }
+    } catch (error) {
+      console.error('Error rejecting leave:', error);
+      await alert.error("Có lỗi xảy ra khi từ chối đơn xin nghỉ");
+    }
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return 'success';
+      case 'REJECTED':
+        return 'destructive';
+      case 'PENDING':
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Leave Requests</h2>
-          <p className="text-muted-foreground">Manage and approve employee leave requests</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Calendar className="mr-2 h-4 w-4" />
-            This Month
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <PendingCard pendingCount={9}/>
-        <ApproveCard ApproveCount={3}/>
-        <RejectCard RejectCount={1}/>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Leave Request Management</CardTitle>
-          <CardDescription>Review and manage employee leave requests</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex w-full max-w-sm items-center space-x-2">
-                <Input
-                  placeholder="Search requests..."
-                  className="h-9"
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value)
-                    setCurrentPage(1) // Reset to first page on search
-                  }}
-                />
-                <Button size="sm" variant="ghost">
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Select
-                  value={statusFilter}
-                  onValueChange={(value) => {
-                    setStatusFilter(value)
-                    setCurrentPage(1) // Reset to first page on filter change
-                  }}
-                >
-                  <SelectTrigger className="w-[120px] h-9">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* <Button variant="outline" size="sm">
-                  <Filter className="mr-2 h-4 w-4" />
-                  More Filters
-                </Button> */}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                Showing {Math.min(filteredRequests.length, (currentPage - 1) * itemsPerPage + 1)}-
-                {Math.min(filteredRequests.length, currentPage * itemsPerPage)} of {filteredRequests.length} requests
-              </div>
-            </div>
-
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Leave Type</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>End Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedRequests.length > 0 ? (
-                    paginatedRequests.map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell className="font-medium">{request.employee}</TableCell>
-                        <TableCell>{request.leaveType}</TableCell>
-                        <TableCell>{request.startDate}</TableCell>
-                        <TableCell>{request.endDate}</TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusVariant(request.status)}>{request.status}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {request.status === "Pending" && (
-                              <>
-                                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                                  <Check className="h-4 w-4 text-green-500" />
-                                </Button>
-                                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                                  <X className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </>
-                            )}
-                            {/* <Button variant="ghost" size="sm">
-                              View
-                            </Button> */}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
-                        No requests found matching your search criteria
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Pagination controls */}
-            {filteredRequests.length > 0 && (
-              <div className="flex items-center justify-end space-x-2 py-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center gap-1 mx-2">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    const pageNumber = i + 1
-                    return (
-                      <Button
-                        key={pageNumber}
-                        variant={currentPage === pageNumber ? "default" : "outline"}
-                        size="sm"
-                        className="w-9 h-9"
-                        onClick={() => setCurrentPage(pageNumber)}
-                      >
-                        {pageNumber}
-                      </Button>
-                    )
-                  })}
-                  {totalPages > 5 && <span className="mx-1">...</span>}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
+    <>
+      <Breadcrumb pageName="Leave Requests" />
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search by Employee ID..."
+              className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              onChange={handleSearchChange}
+            />
           </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
+          <div className="ml-auto">
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[180px] py-3">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Status</SelectItem>
+                <SelectItem value="PENDING">Pending</SelectItem>
+                <SelectItem value="APPROVED">Approved</SelectItem>
+                <SelectItem value="REJECTED">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-// Extended sample data with more employees and department information
-const extendedLeaveRequestData = [
-  {
-    id: 1,
-    employee: "David Johnson",
-    department: "Kitchen",
-    leaveType: "Sick Leave",
-    startDate: "2025-03-08",
-    endDate: "2025-03-09",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    employee: "Sarah Williams",
-    department: "Service",
-    leaveType: "Vacation",
-    startDate: "2025-03-15",
-    endDate: "2025-03-22",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    employee: "Michael Miller",
-    department: "Kitchen",
-    leaveType: "Personal Leave",
-    startDate: "2025-03-10",
-    endDate: "2025-03-10",
-    status: "Pending",
-  },
-  {
-    id: 4,
-    employee: "Jennifer Davis",
-    department: "Service",
-    leaveType: "Sick Leave",
-    startDate: "2025-03-12",
-    endDate: "2025-03-13",
-    status: "Pending",
-  },
-  {
-    id: 5,
-    employee: "Robert Brown",
-    department: "Kitchen",
-    leaveType: "Family Emergency",
-    startDate: "2025-03-09",
-    endDate: "2025-03-11",
-    status: "Pending",
-  },
-  {
-    id: 6,
-    employee: "Lisa Wilson",
-    department: "Service",
-    leaveType: "Vacation",
-    startDate: "2025-02-20",
-    endDate: "2025-02-27",
-    status: "Approved",
-  },
-  {
-    id: 7,
-    employee: "John Smith",
-    department: "Kitchen",
-    leaveType: "Sick Leave",
-    startDate: "2025-02-15",
-    endDate: "2025-02-16",
-    status: "Approved",
-  },
-  {
-    id: 8,
-    employee: "Maria Garcia",
-    department: "Service",
-    leaveType: "Personal Leave",
-    startDate: "2025-02-18",
-    endDate: "2025-02-18",
-    status: "Rejected",
-  },
-  {
-    id: 9,
-    employee: "James Taylor",
-    department: "Bar",
-    leaveType: "Vacation",
-    startDate: "2025-03-25",
-    endDate: "2025-04-01",
-    status: "Pending",
-  },
-  {
-    id: 10,
-    employee: "Patricia Anderson",
-    department: "Service",
-    leaveType: "Sick Leave",
-    startDate: "2025-02-28",
-    endDate: "2025-03-01",
-    status: "Approved",
-  },
-  {
-    id: 11,
-    employee: "Thomas Martinez",
-    department: "Kitchen",
-    leaveType: "Family Emergency",
-    startDate: "2025-02-25",
-    endDate: "2025-02-26",
-    status: "Approved",
-  },
-  {
-    id: 12,
-    employee: "Jessica Robinson",
-    department: "Service",
-    leaveType: "Personal Leave",
-    startDate: "2025-03-05",
-    endDate: "2025-03-05",
-    status: "Approved",
-  },
-  {
-    id: 13,
-    employee: "Daniel Clark",
-    department: "Bar",
-    leaveType: "Vacation",
-    startDate: "2025-04-10",
-    endDate: "2025-04-17",
-    status: "Pending",
-  },
-  {
-    id: 14,
-    employee: "Nancy Lewis",
-    department: "Service",
-    leaveType: "Sick Leave",
-    startDate: "2025-03-02",
-    endDate: "2025-03-03",
-    status: "Approved",
-  },
-  {
-    id: 15,
-    employee: "Christopher Lee",
-    department: "Kitchen",
-    leaveType: "Personal Leave",
-    startDate: "2025-03-18",
-    endDate: "2025-03-18",
-    status: "Pending",
-  },
-  {
-    id: 16,
-    employee: "Margaret Walker",
-    department: "Service",
-    leaveType: "Vacation",
-    startDate: "2025-05-01",
-    endDate: "2025-05-08",
-    status: "Pending",
-  },
-  {
-    id: 17,
-    employee: "Matthew Hall",
-    department: "Kitchen",
-    leaveType: "Sick Leave",
-    startDate: "2025-02-10",
-    endDate: "2025-02-12",
-    status: "Approved",
-  },
-  {
-    id: 18,
-    employee: "Karen Young",
-    department: "Management",
-    leaveType: "Personal Leave",
-    startDate: "2025-03-20",
-    endDate: "2025-03-20",
-    status: "Approved",
-  },
-  {
-    id: 19,
-    employee: "Steven Allen",
-    department: "Bar",
-    leaveType: "Vacation",
-    startDate: "2025-04-05",
-    endDate: "2025-04-12",
-    status: "Rejected",
-  },
-  {
-    id: 20,
-    employee: "Betty Hernandez",
-    department: "Service",
-    leaveType: "Sick Leave",
-    startDate: "2025-03-07",
-    endDate: "2025-03-08",
-    status: "Approved",
-  },
-]
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b bg-gray-2 dark:bg-meta-4">
+                <th className="text-left py-4 px-4 font-medium text-slate-600">REQUEST ID</th>
+                <th className="text-left py-4 px-4 font-medium text-slate-600">EMPLOYEE ID</th>
+                <th className="text-left py-4 px-4 font-medium text-slate-600">LEAVE TYPE</th>
+                <th className="text-left py-4 px-4 font-medium text-slate-600">START DATE</th>
+                <th className="text-left py-4 px-4 font-medium text-slate-600">END DATE</th>
+                <th className="text-left py-4 px-4 font-medium text-slate-600">REASON</th>
+                <th className="text-left py-4 px-4 font-medium text-slate-600">STATUS</th>
+                <th className="text-left py-4 px-4 font-medium text-slate-600">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaveRequests.map((request) => (
+                <tr key={request.leaveRequestId} className="border-b hover:bg-slate-50">
+                  <td className="py-4 px-4 text-slate-800">{request.leaveRequestId}</td>
+                  <td className="py-4 px-4 text-slate-800">{request.employeeId}</td>
+                  <td className="py-4 px-4 text-slate-800">{request.leaveType}</td>
+                  <td className="py-4 px-4 text-slate-800">{formatDate(request.startDate)}</td>
+                  <td className="py-4 px-4 text-slate-800">{formatDate(request.endDate)}</td>
+                  <td className="py-4 px-4 text-slate-800">{request.reason || 'N/A'}</td>
+                  <td className="py-4 px-4">
+                    <Badge variant={getStatusBadgeVariant(request.status)}>{request.status}</Badge>
+                  </td>
+                  <td className="py-4 px-4">
+                    {request.status === 'PENDING' && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleApprove(request.leaveRequestId)}
+                          className="h-8 w-8 text-green-600 hover:text-green-700"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleReject(request.leaveRequestId)}
+                          className="h-8 w-8 text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-// Helper function
-function getStatusVariant(status: string) {
-  switch (status) {
-    case "Approved":
-      return "success"
-    case "Rejected":
-      return "destructive"
-    case "Pending":
-      return "warning"
-    default:
-      return "default"
-  }
-}
+        <Pagination className="mt-6">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  href="#"
+                  isActive={index + 1 === currentPage}
+                  onClick={() => handlePageChange(index + 1)}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    </>
+  );
+};
+
+export default LeaveRequest;
 
