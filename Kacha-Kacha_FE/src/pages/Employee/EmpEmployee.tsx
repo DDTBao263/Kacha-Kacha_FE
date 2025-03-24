@@ -4,6 +4,10 @@ import { Button } from '../../components/ui/button';
 import { useCallback, useEffect, useState } from 'react';
 import { debounce } from 'lodash';
 import { EMPLOYEE } from '../../types/employee';
+import { storeService } from '../../services/store';
+import { Store } from '../../types/store';
+
+
 import {
   Pagination,
   PaginationContent,
@@ -23,35 +27,67 @@ const Employee = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<ACCOUNT | null>(null);
+  const [restaurant, setRestaurant] = useState<Store[] | []>([]);
+
 
   useEffect(() => {
-    fetchEmployees(currentPage, 10, searchQuery);
-  }, [currentPage, 10, searchQuery]);
+    const fetchData = async () => {
+      await fetchAllRestaurant(); 
+    };
+    fetchData();
+  }, []);
+  
+  useEffect(() => {
+    if (restaurant.length > 0) {
+      fetchEmployees(currentPage, 10, searchQuery);
+    }
+  }, [restaurant, currentPage, searchQuery]);
 
-  const fetchEmployees = async (page: number, size: 10, keyword: string) => {
+  
+  const fetchAllRestaurant = async () => {
+    const page: number = 1;
+    const size: number = 100;
+    const keyword: string = "";
     try {
-      const response = await employeeService.getEmployee(
-        page - 1,
-        size,
-        keyword,
-      );
-      const employee =
-        response.data.data.content?.map((employee: any) => ({
-          employeeId: employee.employeeId,
-          name: employee.name,
-          email: employee.email,
-          phone: employee.phoneNumber || '',
-          address: employee.address || '',
-          status: employee.status,
-          role: employee.role,
-        })) || [];
-      setEmployees(employee);
-      const total = response.data.data.totalPages || 1;
-      setTotalPages(total);
+      const response = await storeService.getAllStores(page -1 , size, keyword);
+      if(response.data){
+        setRestaurant(response.data.content)
+      }
     } catch (error) {
-      console.error('Failed to fetch accounts:', error);
+      console.error('Failed to fetch restaurant:', error);
     }
   };
+
+
+  const fetchEmployees = async (page: number, size: number, keyword: string) => {
+    try {
+      const response = await employeeService.getEmployee(page - 1, size, keyword);
+      // console.log("Danh sách nhân viên:", response.data.data.content);
+      // console.log("Danh sách nhà hàng:", restaurant);
+  
+      const employees: EMPLOYEE[] = response.data.data.content?.map((employee: any) => {
+        const restaurantData: Store | undefined = restaurant.find(
+          (r: Store) => r.id == employee.restaurantId
+        );
+        // console.log(`Employee ${employee.name} có restaurantId:`, employee.restaurantId);
+        // console.log(`Tìm thấy restaurantData:`, restaurantData);
+  
+        return {
+          ...employee,
+          restaurantLocation: restaurantData ? restaurantData.location : 'Not determined',
+        };
+      }) || [];
+  
+      setEmployees(employees);
+      setTotalPages(response.data.data.totalPages || 1);
+    } catch (error) {
+      console.error('Failed to fetch employee:', error);
+    }
+  };
+  
+  
+
+
 
   const changeTextColor = () => {
     setIsOptionSelected(true);
@@ -73,7 +109,7 @@ const Employee = () => {
   };
 
 
-  const handleEditClick = (account: ACCOUNT) => {
+  const handleEditClick = (account: EMPLOYEE) => {
       // console.log('Selected account ID:', account.userId);
       // console.log('Selected account:', account);
       setSelectedAccount(account);
@@ -211,6 +247,7 @@ const Employee = () => {
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           account={selectedAccount} 
+          restaurant={restaurant}
           //onSave={handleUpdateAccount}
       />
     </>

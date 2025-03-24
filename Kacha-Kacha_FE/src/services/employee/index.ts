@@ -31,23 +31,9 @@ export const employeeService = {
     });
   },
 
-  AddEmployee: async (newEmployee: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  }) => {
+  UpdateEmpById: async (data: any, id: number) => {
     const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.post('/api/employees', newEmployee, {
-      headers: {
-        Authorization: `Bearer ${jwt_Token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-  },
-    
-  UpdateEmpById: async (data: any) => {
-    const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.put(`/api/employees/${data.id}`, data, {
+    return axiosPrivate.put(`/api/employees/${id}`, data, {
       headers: {
         Authorization: `Bearer ${jwt_Token},`,
       },
