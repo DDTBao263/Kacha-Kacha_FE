@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import {
   Avatar,
   AvatarFallback,
@@ -38,10 +39,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 // import { EMPLOYEE } from '../../types/employee';
 import { employeeService } from '../../services/employee/index';
+import { shiftService } from '../../services/shift';
 
 interface Params {
   id: string;
   idprofileemployee: string;
+}
+
+interface TimekeepingRecord {
+  date: string;
+  clockIn: string;
+  clockOut: string;
+  hours: string;
+  status: string;
 }
 
 interface EMPLOYEE {
@@ -59,9 +69,12 @@ interface EMPLOYEE {
 export default function ProfileEmployyee() {
   const navigate = useNavigate();
   const { id, idprofileemployee } = useParams();
-
+  const [timekeepingHistory, setTimekeepingHistory] = useState<
+    TimekeepingRecord[]
+  >([]);
   const [employeeDetail, setEmployeeDetail] = useState<EMPLOYEE | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('absence');
 
   const fetchEmployees = async (idprofileemployee: number) => {
     setLoading(true);
@@ -90,14 +103,51 @@ export default function ProfileEmployyee() {
     }
   };
 
+  const fetchTimekeepingHistory = async (idprofileemployee: number) => {
+    try {
+      const { data } = await shiftService.getTimeKeeping(idprofileemployee);
+      console.log('data', data);
+      const formattedData = data
+        .filter(
+          (record: any) =>
+            record ||
+            record.date ||
+            record.attendanceStartTime ||
+            record.attendanceEndTime,
+        ) // Loại bỏ phần tử không hợp lệ
+        .map((record: any) => ({
+          date: record.date?.split('T')[0] || 'N/A',
+          clockIn:
+            record.attendanceStartTime?.split('T')[1]?.substring(0, 8) || 'N/A',
+          clockOut:
+            record.attendanceEndTime?.split('T')[1]?.substring(0, 8) || 'N/A',
+          hours: record.totalTime
+            ? `${Math.floor(record.totalTime)}h ${Math.round(
+                (record.totalTime % 1) * 60,
+              )}m`
+            : '0h 0m',
+          status: record.attendaceStatus || 'UNKNOWN',
+        }));
+
+      setTimekeepingHistory(formattedData);
+    } catch (error) {
+      console.error('Failed to fetch timekeeping history:', error);
+    }
+  };
+
   useEffect(() => {
-    if (idprofileemployee) {
+    if (activeTab === 'absence' && idprofileemployee) {
       const profileEmployeeId = parseInt(idprofileemployee, 10);
       if (!isNaN(profileEmployeeId)) {
         fetchEmployees(profileEmployeeId);
       }
+    } else if (activeTab === 'timekeeping' && idprofileemployee) {
+      const profileEmployeeId = parseInt(idprofileemployee, 10);
+      if (!isNaN(profileEmployeeId)) {
+        fetchTimekeepingHistory(profileEmployeeId);
+      }
     }
-  }, [idprofileemployee]);
+  }, [activeTab, idprofileemployee]);
 
   // console.log('employeeDetail', employeeDetail);
 
@@ -113,7 +163,7 @@ export default function ProfileEmployyee() {
           onClick={handleBackToDetailRestaurants}
         >
           <ChevronRight className="mr-2 h-4 w-4 rotate-180" />
-          Back to Restaurants
+          Back
         </Button>
       </div>
       <div className="flex flex-col md:flex-row gap-6">
@@ -246,7 +296,11 @@ export default function ProfileEmployyee() {
       </div>
 
       {/* Tabs for History and Schedule */}
-      <Tabs defaultValue="absence" className="w-full">
+      <Tabs
+        defaultValue="absence"
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
         <TabsList className="grid grid-cols-4 w-full md:w-auto">
           <TabsTrigger value="absence">Absence Stats</TabsTrigger>
           <TabsTrigger value="timekeeping">Timekeeping</TabsTrigger>
@@ -347,43 +401,7 @@ export default function ProfileEmployyee() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      {
-                        date: 'Mar 9, 2025',
-                        clockIn: '08:55 AM',
-                        clockOut: '05:10 PM',
-                        hours: '8h 15m',
-                        status: 'Complete',
-                      },
-                      {
-                        date: 'Mar 8, 2025',
-                        clockIn: '09:02 AM',
-                        clockOut: '05:30 PM',
-                        hours: '8h 28m',
-                        status: 'Complete',
-                      },
-                      {
-                        date: 'Mar 7, 2025',
-                        clockIn: '08:45 AM',
-                        clockOut: '04:50 PM',
-                        hours: '8h 05m',
-                        status: 'Complete',
-                      },
-                      {
-                        date: 'Mar 6, 2025',
-                        clockIn: '09:15 AM',
-                        clockOut: '05:45 PM',
-                        hours: '8h 30m',
-                        status: 'Complete',
-                      },
-                      {
-                        date: 'Mar 5, 2025',
-                        clockIn: '08:50 AM',
-                        clockOut: '05:05 PM',
-                        hours: '8h 15m',
-                        status: 'Complete',
-                      },
-                    ].map((record, i) => (
+                    {timekeepingHistory.map((record, i) => (
                       <tr key={i} className="border-b">
                         <td className="py-3 px-2">{record.date}</td>
                         <td className="py-3 px-2">{record.clockIn}</td>
@@ -391,8 +409,17 @@ export default function ProfileEmployyee() {
                         <td className="py-3 px-2">{record.hours}</td>
                         <td className="py-3 px-2">
                           <Badge
-                            variant="outline"
-                            className="bg-green-50 text-green-700 border-green-200"
+                            variant={
+                              record.status === 'PRESENT'
+                                ? 'success'
+                                : record.status === 'NO ATTENDANCE'
+                                ? 'destructive'
+                                : record.status === 'LATE'
+                                ? 'warning'
+                                : record.status === 'EARLY'
+                                ? 'warning'
+                                : 'outline'
+                            }
                           >
                             {record.status}
                           </Badge>
@@ -435,134 +462,10 @@ export default function ProfileEmployyee() {
                             <th className="text-left py-3 px-2 font-medium">
                               Status
                             </th>
-                            <th className="text-left py-3 px-2 font-medium">
-                              Notes
-                            </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {[
-                            {
-                              date: 'Mar 9, 2025',
-                              clockIn: '08:55 AM',
-                              clockOut: '05:10 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Mar 8, 2025',
-                              clockIn: '09:02 AM',
-                              clockOut: '05:30 PM',
-                              hours: '8h 28m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Mar 7, 2025',
-                              clockIn: '08:45 AM',
-                              clockOut: '04:50 PM',
-                              hours: '8h 05m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Mar 6, 2025',
-                              clockIn: '09:15 AM',
-                              clockOut: '05:45 PM',
-                              hours: '8h 30m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Mar 5, 2025',
-                              clockIn: '08:50 AM',
-                              clockOut: '05:05 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Mar 4, 2025',
-                              clockIn: '08:45 AM',
-                              clockOut: '05:00 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Mar 3, 2025',
-                              clockIn: '09:00 AM',
-                              clockOut: '05:15 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Mar 2, 2025',
-                              clockIn: '08:30 AM',
-                              clockOut: '04:45 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Mar 1, 2025',
-                              clockIn: '09:05 AM',
-                              clockOut: '05:20 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Feb 28, 2025',
-                              clockIn: '08:50 AM',
-                              clockOut: '05:05 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Feb 27, 2025',
-                              clockIn: '08:55 AM',
-                              clockOut: '05:10 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Feb 26, 2025',
-                              clockIn: '09:10 AM',
-                              clockOut: '05:25 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Feb 25, 2025',
-                              clockIn: '08:45 AM',
-                              clockOut: '05:00 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Feb 24, 2025',
-                              clockIn: '08:50 AM',
-                              clockOut: '05:05 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                            {
-                              date: 'Feb 23, 2025',
-                              clockIn: '09:00 AM',
-                              clockOut: '05:15 PM',
-                              hours: '8h 15m',
-                              status: 'Complete',
-                              notes: '',
-                            },
-                          ].map((record, i) => (
+                          {timekeepingHistory.map((record, i) => (
                             <tr key={i} className="border-b">
                               <td className="py-3 px-2">{record.date}</td>
                               <td className="py-3 px-2">{record.clockIn}</td>
@@ -576,7 +479,6 @@ export default function ProfileEmployyee() {
                                   {record.status}
                                 </Badge>
                               </td>
-                              <td className="py-3 px-2">{record.notes}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -590,7 +492,7 @@ export default function ProfileEmployyee() {
         </TabsContent>
 
         {/* Leave Request History */}
-        <TabsContent value="leave">
+        {/* <TabsContent value="leave">
           <Card>
             <CardHeader>
               <CardTitle>Leave Request History</CardTitle>
@@ -861,10 +763,10 @@ export default function ProfileEmployyee() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         {/* Upcoming Work Schedule */}
-        <TabsContent value="schedule">
+        {/* <TabsContent value="schedule">
           <Card>
             <CardHeader>
               <CardTitle>Upcoming Work Schedule</CardTitle>
@@ -1015,7 +917,7 @@ export default function ProfileEmployyee() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );

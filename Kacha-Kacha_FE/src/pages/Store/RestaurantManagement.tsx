@@ -100,7 +100,17 @@ const RestaurantManagement = () => {
                 {store.phoneNumber}
               </div>
               <div className="mt-2 flex items-center gap-2">
-                <Badge variant="outline">{store.status}</Badge>
+                <Badge
+                  variant={
+                    store.status === 'OPEN'
+                      ? 'success'
+                      : store.status === 'CLOSED'
+                      ? 'destructive'
+                      : 'outline'
+                  }
+                >
+                  {store.status}
+                </Badge>
               </div>
             </CardContent>
           </Card>

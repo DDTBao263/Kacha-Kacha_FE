@@ -85,13 +85,14 @@ const EmpManagement = () => {
     navigate(`/restaurantManager/restaurants`);
   };
 
-
   const handleViewClick = (idProfileEmployees: number) => {
     if (restaurant && restaurant.id) {
       // console.log("restaurant", restaurant.id);
-      navigate(`/restaurantManager/restaurants/${restaurant.id}/employees/${idProfileEmployees}/profileemployees`);
+      navigate(
+        `/restaurantManager/restaurants/${restaurant.id}/employees/${idProfileEmployees}/profileemployees`,
+      );
     } else {
-      console.error("Restaurant is undefined or missing id.");
+      console.error('Restaurant is undefined or missing id.');
     }
   };
   return (
@@ -128,7 +129,9 @@ const EmpManagement = () => {
                   <div>
                     <p className="font-medium">
                       Name:{' '}
-                      {restaurant ? restaurant.storeManager?.name : 'Loading...'}
+                      {restaurant
+                        ? restaurant.storeManager?.name
+                        : 'Loading...'}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Email:{' '}
@@ -172,18 +175,17 @@ const EmpManagement = () => {
                       <TableCell>
                         <Badge
                           variant={
-                            employee.status === 'Active'
-                              ? 'default'
-                              : employee.status === 'On Leave'
-                              ? 'outline'
-                              : 'secondary'
+                            employee.status === 'ACTIVE'
+                              ? 'success'
+                              : employee.status === 'INACTIVE'
+                              ? 'destructive'
+                              : 'warning'
                           }
                         >
                           {employee.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
-
                         <button
                           onClick={() => handleViewClick(employee.employeeId)}
                           className="hover:text-primary"
