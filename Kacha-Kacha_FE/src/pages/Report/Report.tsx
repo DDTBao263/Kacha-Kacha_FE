@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { CalendarIcon, Download, FileSpreadsheet, Loader2 ,ChevronRight , ChevronLeft} from "lucide-react"
+import { useState, useEffect } from "react"
+import { CalendarIcon, Download, FileSpreadsheet, Loader2, ChevronRight, ChevronLeft } from "lucide-react"
 import { format } from "date-fns"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
@@ -8,16 +8,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/pop
 import { Input } from "../../components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown"
 import { cn } from "../../lib/utils"
-import { AttendanceTable } from "../../components/PageUI/Report/AttendanceTable"
-// import { exportToExcel, exportToCSV, exportToPDF } from "../../utils/Helper"
+import { storeService } from "../../services/store"
+import { Store } from "../../types/store"
+import { reportService } from "../../services/report"
+import { alert } from "../../utils/Alert"
 
-// Mock data for restaurants
-const restaurants = [
-  { id: "1", name: "Downtown Bistro" },
-  { id: "2", name: "Seaside Grill" },
-  { id: "3", name: "Mountain View Restaurant" },
-  { id: "4", name: "City Center Café" },
-]
+// import { exportToExcel, exportToCSV, exportToPDF } from "../../utils/Helper"
 
 export default function TimekeepingExport() {
   const [selectedRestaurant, setSelectedRestaurant] = useState("")
@@ -25,47 +21,73 @@ export default function TimekeepingExport() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
-//   const { toast } = useToast()
+  const [restaurants, setRestaurants] = useState<Store[]>([])
+  //   const { toast } = useToast()
+
+  useEffect(() => {
+    fetchRestaurants()
+  }, [])
+
+  const fetchRestaurants = async () => {
+    try {
+      const response = await storeService.getStoresBySearch("")
+      const content = response.data.content || response.data.data?.content
+      const restaurantsData = content.map((store: any) => ({
+        id: store.id,
+        name: `Kacha-Kacha ${store.location}`,
+        location: store.location,
+        phoneNumber: store.phoneNumber,
+        status: store.status,
+        storeManager: store.storeManager
+      }))
+      setRestaurants(restaurantsData)
+    } catch (error) {
+      console.error('Failed to fetch restaurants:', error)
+    }
+  }
 
   // Function to handle export
   const handleExport = async (exportFormat: "excel" | "csv" | "pdf") => {
-    // // if (!selectedRestaurant || !date) {
-    // //   toast({
-    // //     title: "Missing information",
-    // //     description: "Please select a restaurant and month before exporting.",
-    // //     variant: "destructive",
-    // //   })
-    // //   return
-    // // }
+    if (!selectedRestaurant || !date) {
+      alert.error("Vui lòng chọn nhà hàng và tháng trước khi xuất báo cáo")
+      return
+    }
 
-    // setIsExporting(true)
-    // try {
-    //   // In a real application, you would fetch the data here
-    //   // For this example, we'll use the mock data from the AttendanceTable component
+    setIsExporting(true)
+    try {
+      const month = date.getMonth() + 1 // JavaScript months are 0-based
+      const response = await reportService.exportReport(parseInt(selectedRestaurant), month)
 
-    //   const fileName = `${restaurants.find((r) => r.id === selectedRestaurant)?.name}-${format(date, "MMMM-yyyy")}`
+      // Lấy URL từ response
+      const downloadUrl = response.data
 
-    //   if (exportFormat === "excel") {
-    //     await exportToExcel(fileName)
-    //   } else if (exportFormat === "csv") {
-    //     await exportToCSV(fileName)
-    //   } else if (exportFormat === "pdf") {
-    //     await exportToPDF(fileName)
-    //   }
+      // Fetch file từ URL
+      const fileResponse = await fetch(downloadUrl)
+      const blob = await fileResponse.blob()
 
-    // //   toast({
-    // //     title: "Export successful",
-    // //     description: `The data has been exported to ${format.toUpperCase()} format.`,
-    // //   })
-    // } catch (error) {
-    // //   toast({
-    // //     title: "Export failed",
-    // //     description: "There was an error exporting the data. Please try again.",
-    // //     variant: "destructive",
-    // //   })
-    // } finally {
-    //   setIsExporting(false)
-    // }
+      // Tạo URL từ blob
+      const url = window.URL.createObjectURL(blob)
+
+      // Tạo link tải và click tự động
+      const link = document.createElement('a')
+      link.href = url
+      const restaurantName = restaurants.find(r => r.id.toString() === selectedRestaurant)?.name || 'report'
+      link.download = `${restaurantName}-${format(date, "MMMM-yyyy")}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      // Thông báo thành công
+      alert.success("Xuất báo cáo thành công!")
+    } catch (error) {
+      console.error('Failed to export report:', error)
+      alert.error("Không thể xuất báo cáo. Vui lòng thử lại sau!")
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   // Function to load data when restaurant and date are selected
@@ -106,9 +128,9 @@ export default function TimekeepingExport() {
                 <SelectTrigger id="restaurant">
                   <SelectValue placeholder="Select a restaurant" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
                   {restaurants.map((restaurant) => (
-                    <SelectItem key={restaurant.id} value={restaurant.id}>
+                    <SelectItem key={restaurant.id} value={restaurant.id.toString()}>
                       {restaurant.name}
                     </SelectItem>
                   ))}
@@ -217,45 +239,9 @@ export default function TimekeepingExport() {
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   Export to Excel
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport("csv")}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Export to CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport("pdf")}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Export to PDF
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Attendance Data Preview</CardTitle>
-          <CardDescription>Preview employee attendance data before exporting</CardDescription>
-          <div className="mt-4">
-            <Input
-              placeholder="Search employees..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : selectedRestaurant && date ? (
-            <AttendanceTable searchQuery={searchQuery} />
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Select a restaurant and month to view attendance data
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
