@@ -36,12 +36,24 @@ import {
 } from '../../components/ui/dialog';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { EMPLOYEE } from '../../types/employee';
+// import { EMPLOYEE } from '../../types/employee';
 import { employeeService } from '../../services/employee/index';
 
 interface Params {
   id: string;
   idprofileemployee: string;
+}
+
+interface EMPLOYEE {
+  employeeId: number;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  address: string;
+  status: string;
+  role: string;
+  // restaurantId: number;
+  // restaurantLocation: string;
 }
 
 export default function ProfileEmployyee() {
@@ -67,7 +79,7 @@ export default function ProfileEmployyee() {
         address: data.data.address || '',
         status: data.data.status || '',
         // avatar:data.data.avatar || "",
-        role:data.data.role || ""
+        role: data.data.role || '',
       };
 
       setEmployeeDetail(profileEmployee);
@@ -113,15 +125,16 @@ export default function ProfileEmployyee() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-6 items-start">
-            <Avatar className="w-24 h-24 border">
-                <AvatarImage src="/placeholder.svg?height=96&width=96" alt="User avatar" />
+              <Avatar className="w-24 h-24 border">
+                <AvatarImage
+                  src="/placeholder.svg?height=96&width=96"
+                  alt="User avatar"
+                />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div className="space-y-4 flex-1">
                 <div>
-                  <h3 className="text-2xl font-bold">
-                    {employeeDetail?.name}
-                  </h3>{' '}
+                  <h3 className="text-2xl font-bold">{employeeDetail?.name}</h3>{' '}
                   <p className="text-muted-foreground">
                     {employeeDetail?.role}
                   </p>{' '}

@@ -39,4 +39,18 @@ export const employeeService = {
       },
     });
   },
+
+  AddEmployee: async (newEmployee: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  }) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.post('/api/employees', newEmployee, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  },
 };
