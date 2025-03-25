@@ -126,7 +126,7 @@ const Employee = () => {
                       className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
                         emp.status === 'ACTIVE'
                           ? 'bg-success text-success'
-                          : emp.status === 'ON LEAVE'
+                          : emp.status === 'INACTIVE'
                           ? 'bg-danger text-danger'
                           : 'bg-warning text-warning'
                       }`}

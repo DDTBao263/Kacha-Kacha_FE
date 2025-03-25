@@ -24,9 +24,8 @@ interface EditAccountDialogProps {
     name: string;
     email: string;
     address: string;
-    phone: string;
+    phoneNumber: string;
     status: string;
-    role: string;
     restaurantId: string;
     restaurantLocation: string;
   } | null;
@@ -51,16 +50,13 @@ export function EditEmployeeDiaLog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // console.log('account', account);
-  // console.log("restaurant", restaurant);
-
   useEffect(() => {
     if (account) {
       setFirstName(account.firstName || '');
       setName(account.name || '');
       setLastName(account.lastName || '');
       setEmail(account.email || '');
-      setPhone(account.phone || '');
+      setPhone(account.phoneNumber || '');
       setAddress(account.address || '');
       setStatus(account.status || '');
       setRestaurantId(account.restaurantId || '');
@@ -90,7 +86,7 @@ export function EditEmployeeDiaLog({
       firstName,
       lastName,
       email,
-      phoneNumber: phone,
+      phone,
       address,
       restaurantId: Number(restaurantId),
       status,
@@ -104,8 +100,8 @@ export function EditEmployeeDiaLog({
         Number(account.employeeId),
       );
       // console.log("res", res)
-      if(res.status ==200){
-        alert("Update SuccessFully")
+      if (res.status == 200) {
+        alert('Update SuccessFully');
         setLoading(false);
         onOpenChange(false);
         window.dispatchEvent(new Event('refreshAccounts'));
@@ -174,12 +170,12 @@ export function EditEmployeeDiaLog({
               value={restaurantLocation}
               onChange={(e) => {
                 // console.log("e.target.value", e.target.value);
-                
+
                 const restaurantName: Store | undefined = restaurant.find(
-                  (r: Store) => r.id == Number(e.target.value)
+                  (r: Store) => r.id == Number(e.target.value),
                 );
                 // console.log("restaurantName", restaurantName);
-                setRestaurantLocation(restaurantName.location)
+                setRestaurantLocation(restaurantName?.location || '');
                 setRestaurantId(e.target.value);
               }}
               required
@@ -201,13 +197,12 @@ export function EditEmployeeDiaLog({
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              required
+              disabled
               className="w-full rounded-lg border py-2 px-4"
             >
               <option value="ACTIVE">ACTIVE</option>
-              <option value="ACTIVE">ACTIVE</option>
               <option value="INACTIVE">INACTIVE</option>
-              <option value="SUSPENDED">SUSPENDED</option>
+              <option value="ONLEAVE">ON LEAVE</option>
             </select>
           </div>
           <div className="col-span-2 flex justify-end space-x-2">
