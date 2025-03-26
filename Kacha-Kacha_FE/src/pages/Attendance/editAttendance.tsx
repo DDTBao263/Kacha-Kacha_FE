@@ -1,7 +1,5 @@
 import type React from 'react';
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../redux/store';
 import {
   Dialog,
   DialogContent,
@@ -52,8 +50,6 @@ export function EditAttendDialog({
   onSuccess,
   attendance,
 }: EditAttendDialogProps) {
-  const user = useSelector((state: RootState) => state.auth.user);
-  const [storeManagerId, setStoreManagerId] = useState<number>(0);
   const [employeeId, setEmployeeId] = useState<number | null>(null);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -63,12 +59,6 @@ export function EditAttendDialog({
   const [shiftId, setShiftId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (user?.id) {
-      setStoreManagerId(user.id);
-    }
-  }, [user]);
 
   useEffect(() => {
     if (attendance) {
@@ -95,8 +85,8 @@ export function EditAttendDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!employeeId || !date || !shiftId) {
-      setError('Please fill in all required fields.');
+    if (!employeeId || !date) {
+      setError('Please fill in all required information.');
       return;
     }
 
@@ -119,20 +109,19 @@ export function EditAttendDialog({
       breakTime: breakTime || 0,
       note: note || null,
       date: new Date(date).toISOString(),
-      shiftId: parseInt(shiftId),
-      storeManagerId: storeManagerId
+      shiftId: attendance?.shiftId || 3001 // Use existing shiftId or default to 3001
     };
 
     try {
       await attendanceService.editTodayAttend(attendance?.id || 0, updatedAttend);
-      await alert.success('Successfully updated attendance');
+      await alert.success('Update attendance successfully');
       onOpenChange(false);
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
       setError('Failed to update attendance. Please try again.');
-      await alert.error('Could not update attendance. Please try again');
+      await alert.error('Failed to update attendance. Please try again');
       console.error('Failed to update attendance:', error);
     } finally {
       setLoading(false);
@@ -154,7 +143,7 @@ export function EditAttendDialog({
         <DialogHeader>
           <DialogTitle>Edit Attendance</DialogTitle>
           <DialogDescription>
-            Edit attendance record. Please fill in all required information.
+            Edit attendance information. Please fill in all required information.
           </DialogDescription>
         </DialogHeader>
 
@@ -168,22 +157,6 @@ export function EditAttendDialog({
               disabled
               className="bg-gray-100"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="shift">Work Shift</Label>
-            <Select value={shiftId} onValueChange={handleShiftChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select work shift" />
-              </SelectTrigger>
-              <SelectContent>
-                {SHIFTS.map((shift) => (
-                  <SelectItem key={shift.id} value={shift.id.toString()}>
-                    {shift.name} ({shift.startTime} - {shift.endTime})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">
@@ -254,7 +227,7 @@ export function EditAttendDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? 'Saving...' : 'Save changes'}
             </Button>
           </DialogFooter>
         </form>

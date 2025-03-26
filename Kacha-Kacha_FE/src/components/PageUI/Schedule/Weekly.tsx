@@ -1,5 +1,10 @@
-import { useState } from "react"
-import { addDays, format } from "date-fns"
+import { useState, useEffect, useCallback } from 'react';
+import { format, addDays } from 'date-fns';
+import { employeeService } from '../../../services/employee';
+import { scheduleService } from '../../../services/schedule';
+import { userService } from '../../../services/user';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 import { Plus } from "lucide-react"
 
 import { Button } from "../../ui/button"
@@ -9,110 +14,113 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "../../ui/pagination"
 
-// Mock data for shifts
-const initialShifts = [
-  { id: 1, employeeId: 1, day: new Date(), startTime: "09:00", endTime: "17:00" },
-  { id: 2, employeeId: 2, day: new Date(), startTime: "10:00", endTime: "18:00" },
-  { id: 3, employeeId: 3, day: addDays(new Date(), 1), startTime: "08:00", endTime: "16:00" },
-]
-
-type Employee = {
-  id: number
-  name: string
-  department: string
-  avatar: string
-}
-
 type WeeklyScheduleProps = {
-  weekStart: Date
-  employees: Employee[]
-  onAddShift: (day: Date, employeeId: number) => void
-}
+  weekStart: Date;
+  onAddShift: (day: Date, employeeId: number) => void;
+};
 
-export function WeeklySchedule({ weekStart, employees, onAddShift }: WeeklyScheduleProps) {
-  const [shifts, setShifts] = useState(initialShifts)
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+type ShiftDTO = {
+  shiftId: number;
+  employeeShiftId: number;
+  startTime: string;
+  endTime: string;
+  breakDuration: number;
+  date: string;
+  shiftName: string;
+};
 
-  // Generate array of 7 days starting from weekStart
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+type ScheduleEmployee = {
+  employeeId: number;
+  shiftDTO: ShiftDTO[];
+};
 
-  // Calculate pagination values
-  const totalEmployees = employees.length
-  const totalPages = Math.ceil(totalEmployees / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = Math.min(startIndex + itemsPerPage, totalEmployees)
-  const currentEmployees = employees.slice(startIndex, endIndex)
+export function WeeklySchedule({ weekStart, onAddShift }: WeeklyScheduleProps) {
+  const [scheduleData, setScheduleData] = useState<ScheduleEmployee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [restaurantId, setRestaurantId] = useState<number | null>(null);
+  const user = useSelector((state: RootState) => state.auth.user);
 
-  const getShiftsForDay = (employeeId: number, day: Date) => {
-    const dayStr = format(day, "yyyy-MM-dd")
-    return shifts.filter(
-      (shift) => shift.employeeId === employeeId && format(new Date(shift.day), "yyyy-MM-dd") === dayStr,
-    )
-  }
+  const fetchSchedule = useCallback(async (
+    page: number,
+    size: number = 10
+  ) => {
+    try {
+      if (restaurantId === null) {
+        throw new Error("restaurantId is not set");
+      }
 
-  // Handle page changes
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page)
+      const formattedDate = format(weekStart, 'M/d/yyyy');
+      const encodedDate = encodeURIComponent(formattedDate);
+      const response = await scheduleService.getSchedule(
+        restaurantId,
+        page - 1,
+        size,
+        encodedDate
+      );
+
+      if (response.data?.content) {
+        setScheduleData(response.data.content);
+        setTotalPages(response.data.totalPages || 1);
+      }
+    } catch (error) {
+      console.error('Failed to fetch schedule:', error);
+    } finally {
+      setLoading(false);
     }
-  }
+  }, [restaurantId, weekStart]);
 
-  // Generate page numbers to display
-  const getPageNumbers = () => {
-    const pages = []
-    const maxVisiblePages = 5
-
-    if (totalPages <= maxVisiblePages) {
-      // Show all pages if total is less than max visible
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i)
+  useEffect(() => {
+    const fetchRestaurantId = async () => {
+      try {
+        if (!user) {
+          throw new Error("User is not authenticated");
+        }
+        const userResponse = await userService.getUserByID(user.id, 'STORE_MANAGER');
+        if (!userResponse?.data?.data?.restaurantId) {
+          throw new Error("restaurantId is missing");
+        }
+        setRestaurantId(userResponse.data.data.restaurantId);
+      } catch (error) {
+        console.error('Failed to fetch restaurant ID:', error);
       }
-    } else {
-      // Always show first page
-      pages.push(1)
+    };
 
-      // Calculate range around current page
-      let startPage = Math.max(2, currentPage - 1)
-      let endPage = Math.min(totalPages - 1, currentPage + 1)
+    fetchRestaurantId();
+  }, [user]);
 
-      // Adjust if at the beginning or end
-      if (currentPage <= 2) {
-        endPage = 4
-      } else if (currentPage >= totalPages - 1) {
-        startPage = totalPages - 3
-      }
-
-      // Add ellipsis after first page if needed
-      if (startPage > 2) {
-        pages.push(-1) // -1 represents ellipsis
-      }
-
-      // Add middle pages
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i)
-      }
-
-      // Add ellipsis before last page if needed
-      if (endPage < totalPages - 1) {
-        pages.push(-2) // -2 represents ellipsis
-      }
-
-      // Always show last page
-      if (totalPages > 1) {
-        pages.push(totalPages)
-      }
+  useEffect(() => {
+    if (restaurantId !== null) {
+      fetchSchedule(currentPage, 10);
     }
+  }, [currentPage, restaurantId, fetchSchedule]);
 
-    return pages
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  if (loading) {
+    return <div>Loading...</div>;
   }
+
+  const getShiftForDay = (employeeId: number, date: Date) => {
+    const employee = scheduleData.find(emp => emp.employeeId === employeeId);
+    if (!employee) return null;
+
+    return employee.shiftDTO.find(shift => {
+      const shiftDate = new Date(shift.date);
+      return format(shiftDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -120,7 +128,7 @@ export function WeeklySchedule({ weekStart, employees, onAddShift }: WeeklySched
         <div className="min-w-[800px]">
           {/* Header row with days */}
           <div className="grid grid-cols-8 gap-2 mb-4">
-            <div className="font-medium p-2">Employee</div>
+            <div className="font-medium p-2">Employee ID</div>
             {weekDays.map((day, index) => (
               <div key={index} className="text-center font-medium p-2">
                 <div>{format(day, "EEE")}</div>
@@ -130,92 +138,78 @@ export function WeeklySchedule({ weekStart, employees, onAddShift }: WeeklySched
           </div>
 
           {/* Employee rows */}
-          {currentEmployees.map((employee) => (
-            <div key={employee.id} className="grid grid-cols-8 gap-2 mb-2">
+          {scheduleData.map((employee) => (
+            <div key={employee.employeeId} className="grid grid-cols-8 gap-2 mb-2">
               <div className="flex items-center gap-2 p-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={employee.avatar} alt={employee.name} />
-                  <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="text-sm font-medium">{employee.name}</div>
+                <div className="text-sm font-medium">{employee.employeeId}</div>
               </div>
 
               {/* Days cells */}
               {weekDays.map((day, dayIndex) => {
-                const dayShifts = getShiftsForDay(employee.id, day)
-
+                const shift = getShiftForDay(employee.employeeId, day);
                 return (
                   <div key={dayIndex} className="relative min-h-[60px] border rounded-md p-1 bg-background">
-                    {dayShifts.length > 0 ? (
+                    {shift ? (
                       <TooltipProvider>
-                        {dayShifts.map((shift) => (
-                          <Tooltip key={shift.id}>
-                            <TooltipTrigger asChild>
-                              <Card className="mb-1 cursor-pointer bg-primary/10 hover:bg-primary/20">
-                                <CardContent className="p-2 text-xs">
-                                  {shift.startTime} - {shift.endTime}
-                                </CardContent>
-                              </Card>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{employee.name}</p>
-                              <p>
-                                {format(day, "MMM d")}: {shift.startTime} - {shift.endTime}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        ))}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="p-2 text-xs bg-primary/10 rounded-md">
+                              {shift.shiftName}
+                              <br />
+                              {shift.startTime.split('T')[1].substring(0, 5)} -
+                              {shift.endTime.split('T')[1].substring(0, 5)}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Break: {shift.breakDuration} minutes</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </TooltipProvider>
-                    ) : null}
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute bottom-1 right-1 h-6 w-6 p-0"
-                      onClick={() => onAddShift(day, employee.id)}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span className="sr-only">Add shift</span>
-                    </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute bottom-1 right-1 h-6 w-6 p-0"
+                        onClick={() => onAddShift(day, employee.employeeId)}
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span className="sr-only">Add shift</span>
+                      </Button>
+                    )}
                   </div>
-                )
+                );
               })}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Pagination */}
-      {totalEmployees > 0 && (
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row mt-4">
-          <div className="text-sm text-muted-foreground">
-            Showing {startIndex + 1}-{endIndex} of {totalEmployees} employees
-          </div>
-
+      {scheduleData.length > 0 && (
+        <div className="flex items-center justify-center mt-4">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => goToPage(currentPage - 1)}
+                  href="#"
+                  onClick={() => handlePageChange(currentPage - 1)}
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
-
-              {getPageNumbers().map((page, index) => (
+              {[...Array(totalPages)].map((_, index) => (
                 <PaginationItem key={index}>
-                  {page === -1 || page === -2 ? (
-                    <PaginationEllipsis />
-                  ) : (
-                    <PaginationLink isActive={page === currentPage} onClick={() => goToPage(page)}>
-                      {page}
-                    </PaginationLink>
-                  )}
+                  <PaginationLink
+                    href="#"
+                    isActive={index + 1 === currentPage}
+                    onClick={() => handlePageChange(index + 1)}
+                  >
+                    {index + 1}
+                  </PaginationLink>
                 </PaginationItem>
               ))}
-
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => goToPage(currentPage + 1)}
+                  href="#"
+                  onClick={() => handlePageChange(currentPage + 1)}
                   className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
@@ -224,6 +218,6 @@ export function WeeklySchedule({ weekStart, employees, onAddShift }: WeeklySched
         </div>
       )}
     </div>
-  )
+  );
 }
 

@@ -24,13 +24,32 @@ type Employee = {
 }
 
 type EmployeeListProps = {
-  employees: Employee[]
   onSelectEmployee: (id: number) => void
 }
 
-export function EmployeeList({ employees, onSelectEmployee }: EmployeeListProps) {
+export function EmployeeList({ onSelectEmployee }: EmployeeListProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
+  const [employees, setEmployees] = useState<Employee[]>([
+    {
+      id: 1,
+      name: 'John Doe',
+      department: 'Cashier',
+      avatar: 'https://avatars.githubusercontent.com/u/1?s=400&u=2f7f43fc7f0d7389f3f433e5e677ccd472466430&v=4',
+    },
+    {
+      id: 2,
+      name: 'Jane Smith',
+      department: 'Manager',
+      avatar: 'https://avatars.githubusercontent.com/u/2?s=400&u=d335465b954171e1b56d04432b85558f65e5e231&v=4',
+    },
+    {
+      id: 3,
+      name: 'Mike Johnson',
+      department: 'Cashier',
+      avatar: 'https://avatars.githubusercontent.com/u/3?s=400&u=d335465b954171e1b56d04432b85558f65e5e231&v=4',
+    },
+  ])
   const itemsPerPage = 10
 
   // Filter employees based on search query
