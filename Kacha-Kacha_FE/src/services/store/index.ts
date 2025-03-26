@@ -45,11 +45,23 @@ export const storeService = {
     });
   },
 
-  // updateStore: async(updatedStore:{
-  //   storeId: store.storeId,
-  //     location,
-  //     phoneNumber,
-  //     status,
-  //     storeManagerId: storeManager,
-  // }),
+  updateStore: async (
+    storeId: number,
+    updatedStore: {
+      location: string;
+      phoneNumber: string;
+      status: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    },
+  ) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.put(`/api/restaurants/${storeId}`, updatedStore, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  },
 };

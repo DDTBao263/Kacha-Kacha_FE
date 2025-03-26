@@ -18,11 +18,13 @@ interface UpdateStoreDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   store: {
-    id: string;
+    id: number;
     location: string;
     phoneNumber: string;
     status: string;
-    storeManagerId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
   } | null;
 }
 
@@ -34,64 +36,50 @@ export function UpdateStoreDialog({
   const [location, setLocation] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [status, setStatus] = useState('');
-  const [storeManager, setStoreManager] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
   const [storeManagers, setStoreManagers] = useState<
-    { userId: string; userName: string; email: string }[]
+    { firstName: string; lastName: string; email: string }[]
   >([]);
+  const [selectedManager, setSelectedManager] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchStoreManagers = async () => {
-      //   try {
-      //     const response = await userService.getUsersByRole('DRAFT');
-      //     setStoreManagers(response.data);
-      //   } catch (error) {
-      //     console.error('Failed to fetch store managers:', error);
-      //   }
-    };
-    fetchStoreManagers();
-  }, []);
 
   useEffect(() => {
     if (store) {
       setLocation(store.location || '');
       setPhoneNumber(store.phoneNumber || '');
-      setStatus(store.status || '');
-      setStoreManager(store.storeManagerId || '');
-    } else {
-      setLocation('');
-      setPhoneNumber('');
-      setStatus('');
-      setStoreManager('');
+      setStatus(store.status || 'OPEN');
+      setFirstName(store.firstName || '');
+      setLastName(store.lastName || '');
+      setEmail(store.email || '');
+      setError(null);
     }
   }, [store]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!store?.id || !location || !phoneNumber || !status || !storeManager) {
-      setError('Please fill in all fields.');
-      return;
-    }
+    if (!store) return;
+
     setLoading(true);
     setError(null);
 
-    const updatedStore = {
-      storeId: store.id,
-      location,
-      phoneNumber,
-      status,
-      storeManagerId: storeManager,
-    };
-    console.log('Updated store:', updatedStore);
-
-    // try {
-    //   await storeService.updateStore(updatedStore);
-    //   onOpenChange(false);
-    //   window.dispatchEvent(new Event('refreshStores'));
-    // } catch (error) {
-    //   console.error('Failed to update store:', error);
-    // }
+    try {
+      await storeService.updateStore(store.id, {
+        location,
+        phoneNumber,
+        status,
+        firstName,
+        lastName,
+        email,
+      });
+      onOpenChange(false); // Đóng dialog sau khi cập nhật thành công
+    } catch (err) {
+      setError('Failed to update store. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,6 +91,8 @@ export function UpdateStoreDialog({
             Modify store details and save changes.
           </DialogDescription>
         </DialogHeader>
+
+        {error && <p className="text-red-500">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
@@ -134,30 +124,40 @@ export function UpdateStoreDialog({
               required
               className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             >
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="INACTIVE">INACTIVE</option>
+              <option value="OPEN">OPEN</option>
               <option value="CLOSED">CLOSED</option>
             </select>
           </div>
 
+          {/* First Name */}
           <div className="space-y-2">
-            <Label htmlFor="storeManager">Store Manager</Label>
-            <select
-              id="storeManager"
-              value={storeManager}
-              onChange={(e) => setStoreManager(e.target.value)}
-              required
-              className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            >
-              <option value="" disabled>
-                Select a store manager
-              </option>
-              {storeManagers.map((manager) => (
-                <option key={manager.userId} value={manager.userId}>
-                  {manager.userName} ({manager.email})
-                </option>
-              ))}
-            </select>
+            <Label htmlFor="firstName">First Name</Label>
+            <Input
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+          </div>
+
+          {/* Last Name */}
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+          </div>
+
+          {/* Email */}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
           <DialogFooter className="pt-4">
