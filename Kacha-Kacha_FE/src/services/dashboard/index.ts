@@ -30,4 +30,61 @@ export const dashboardService = {
       },
     );
   },
+
+  //ADMIN
+  getAccountsCount: async (
+    month: number,
+    year: number
+  ) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(
+      `/api/restaurant-managers/accounts/count?month=${month}&year=${year}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+        },
+      },
+    );
+  },
+
+  getRestaurantsCount: async (
+    month: number,
+    year: number
+  ) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(
+      `/api/restaurant-managers/restaurants/count?month=${month}&year=${year}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+        },
+      },
+    );
+  },
+
+  getRestaurantsStatusCount: async () => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(
+      `/api/restaurant-managers/restaurants/status/count`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+        },
+      },
+    );
+  },
+
+  getGrowthData: async (year: number) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(
+      `/api/restaurant-managers/growth?year=${year}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+        },
+      },
+    );
+  },
+
+
 }
