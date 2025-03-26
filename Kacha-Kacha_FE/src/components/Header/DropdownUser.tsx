@@ -53,7 +53,7 @@ const DropdownUser = () => {
         </span>
 
         <span className="h-12 w-12 rounded-full">
-          <img src={user?.imageUrl || UserOne} alt="User" />{' '}
+          <img src={'https://png.pngtree.com/png-clipart/20220303/original/pngtree-pot-and-hotpot-dinner-activities-and-tableware-in-the-pot-png-image_7379296.png'} alt="User" />{' '}
           {/* Hiển thị avatar */}
         </span>
 
