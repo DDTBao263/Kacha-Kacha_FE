@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import {
   Avatar,
   AvatarFallback,
@@ -40,6 +39,7 @@ import { useEffect, useState } from 'react';
 // import { EMPLOYEE } from '../../types/employee';
 import { employeeService } from '../../services/employee/index';
 import { shiftService } from '../../services/shift';
+import { timeService } from '../../services/time';
 
 interface Params {
   id: string;
@@ -52,6 +52,12 @@ interface TimekeepingRecord {
   clockOut: string;
   hours: string;
   status: string;
+}
+
+interface TimeAccumulation {
+  dailyHours: string;
+  weeklyHours: string;
+  monthlyHours: string;
 }
 
 interface EMPLOYEE {
@@ -73,8 +79,10 @@ export default function ProfileEmployyee() {
     TimekeepingRecord[]
   >([]);
   const [employeeDetail, setEmployeeDetail] = useState<EMPLOYEE | null>(null);
+  const [timeAccumulation, setTimeAccumulation] =
+    useState<TimeAccumulation | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>('absence');
+  const [activeTab, setActiveTab] = useState<string>('timekeeping');
 
   const fetchEmployees = async (idprofileemployee: number) => {
     setLoading(true);
@@ -103,6 +111,28 @@ export default function ProfileEmployyee() {
     }
   };
 
+  const fetchTimeAccumulation = async (idprofileemployee: number) => {
+    try {
+      const { data } = await timeService.getTimeAccumulation(idprofileemployee);
+      // const formatTime = (totalTime: number) => {
+      //   return totalTime
+      //     ? `${Math.floor(totalTime)}h ${Math.floor(
+      //         (totalTime % 1) * 60,
+      //       )}m ${Math.round(((totalTime * 60) % 1) * 60)}s`
+      //     : '0h 0m 0s';
+      // };
+
+      const formatTimeAccumulation: TimeAccumulation = {
+        dailyHours: data.dailyHours,
+        weeklyHours: data.weeklyHours || 0,
+        monthlyHours: data.monthlyHours || 0,
+      };
+      setTimeAccumulation(formatTimeAccumulation);
+    } catch (error) {
+      console.error('Failed to fetch time accumulation:', error);
+    }
+  };
+
   const fetchTimekeepingHistory = async (idprofileemployee: number) => {
     try {
       const { data } = await shiftService.getTimeKeeping(idprofileemployee);
@@ -115,6 +145,12 @@ export default function ProfileEmployyee() {
             record.attendanceStartTime ||
             record.attendanceEndTime,
         ) // Loại bỏ phần tử không hợp lệ
+        .sort((a: any, b: any) => {
+          const dateA = a.date ? new Date(a.date).getTime() : 0;
+          const dateB = b.date ? new Date(b.date).getTime() : 0;
+          return dateB - dateA;
+        }) // Sắp xếp theo ngày giảm dần
+        .slice(0, 30) // Lấy 30 ngày gần nhất
         .map((record: any) => ({
           date: record.date?.split('T')[0] || 'N/A',
           clockIn:
@@ -122,10 +158,10 @@ export default function ProfileEmployyee() {
           clockOut:
             record.attendanceEndTime?.split('T')[1]?.substring(0, 8) || 'N/A',
           hours: record.totalTime
-            ? `${Math.floor(record.totalTime)}h ${Math.round(
+            ? `${Math.floor(record.totalTime)}h ${Math.floor(
                 (record.totalTime % 1) * 60,
-              )}m`
-            : '0h 0m',
+              )}m ${Math.round(((record.totalTime * 60) % 1) * 60)}s`
+            : '0h 0m 0s',
           status: record.attendaceStatus || 'UNKNOWN',
         }));
 
@@ -134,6 +170,16 @@ export default function ProfileEmployyee() {
       console.error('Failed to fetch timekeeping history:', error);
     }
   };
+
+  useEffect(() => {
+    if (idprofileemployee) {
+      const profileEmployeeId = parseInt(idprofileemployee, 10);
+      if (!isNaN(profileEmployeeId)) {
+        fetchEmployees(profileEmployeeId);
+        fetchTimeAccumulation(profileEmployeeId);
+      }
+    }
+  }, [idprofileemployee]);
 
   useEffect(() => {
     if (activeTab === 'absence' && idprofileemployee) {
@@ -148,6 +194,23 @@ export default function ProfileEmployyee() {
       }
     }
   }, [activeTab, idprofileemployee]);
+
+  const formatTime = (totalTime: number) => {
+    return totalTime
+      ? `${Math.floor(totalTime)}h ${Math.floor(
+          (totalTime % 1) * 60,
+        )}m ${Math.round(((totalTime * 60) % 1) * 60)}s`
+      : '0h 0m 0s';
+  };
+
+  const calculatePercentage = (actual: number, target: number) => {
+    return target > 0 ? Math.min((actual / target) * 100, 100) : 0;
+  };
+
+  // Định nghĩa target cho từng mức
+  const DAILY_TARGET = 4; // 4 giờ/ngày
+  const WEEKLY_TARGET = 24; // 24 giờ/tuần
+  const MONTHLY_TARGET = 106; // 106 giờ/tháng
 
   // console.log('employeeDetail', employeeDetail);
 
@@ -240,16 +303,27 @@ export default function ProfileEmployyee() {
                     <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                     Today
                   </span>
-                  <span className="font-bold">7h 15m</span>
+                  <span className="font-bold">
+                    {formatTime(Number(timeAccumulation?.dailyHours) || 0)}
+                  </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="bg-primary h-full rounded-full"
-                    style={{ width: '90%' }}
+                    style={{
+                      width: `${calculatePercentage(
+                        Number(timeAccumulation?.dailyHours) || 0,
+                        DAILY_TARGET,
+                      )}%`,
+                    }}
                   ></div>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  90% of daily target (8h 00m)
+                  {calculatePercentage(
+                    Number(timeAccumulation?.dailyHours) || 0,
+                    DAILY_TARGET,
+                  ).toFixed(1)}
+                  % of daily target ({formatTime(DAILY_TARGET)})
                 </div>
               </div>
 
@@ -259,16 +333,27 @@ export default function ProfileEmployyee() {
                     <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                     This Week
                   </span>
-                  <span className="font-bold">32h 45m</span>
+                  <span className="font-bold">
+                    {formatTime(Number(timeAccumulation?.weeklyHours) || 0)}
+                  </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="bg-primary h-full rounded-full"
-                    style={{ width: '82%' }}
+                    style={{
+                      width: `${calculatePercentage(
+                        Number(timeAccumulation?.weeklyHours) || 0,
+                        WEEKLY_TARGET,
+                      )}%`,
+                    }}
                   ></div>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  82% of weekly target (40h 00m)
+                  {calculatePercentage(
+                    Number(timeAccumulation?.weeklyHours) || 0,
+                    WEEKLY_TARGET,
+                  ).toFixed(1)}
+                  % of weekly target ({formatTime(WEEKLY_TARGET)})
                 </div>
               </div>
 
@@ -278,16 +363,27 @@ export default function ProfileEmployyee() {
                     <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                     This Month
                   </span>
-                  <span className="font-bold">142h 30m</span>
+                  <span className="font-bold">
+                    {formatTime(Number(timeAccumulation?.monthlyHours) || 0)}
+                  </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="bg-primary h-full rounded-full"
-                    style={{ width: '85%' }}
+                    style={{
+                      width: `${calculatePercentage(
+                        Number(timeAccumulation?.monthlyHours) || 0,
+                        MONTHLY_TARGET,
+                      )}%`,
+                    }}
                   ></div>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  85% of monthly target (168h 00m)
+                  {calculatePercentage(
+                    Number(timeAccumulation?.monthlyHours) || 0,
+                    MONTHLY_TARGET,
+                  ).toFixed(1)}
+                  % of weekly target ({formatTime(MONTHLY_TARGET)})
                 </div>
               </div>
             </div>
@@ -297,79 +393,17 @@ export default function ProfileEmployyee() {
 
       {/* Tabs for History and Schedule */}
       <Tabs
-        defaultValue="absence"
+        defaultValue="timekeeping"
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList className="grid grid-cols-4 w-full md:w-auto">
-          <TabsTrigger value="absence">Absence Stats</TabsTrigger>
+        <TabsList className="grid grid-cols-3 w-full md:w-auto">
           <TabsTrigger value="timekeeping">Timekeeping</TabsTrigger>
           <TabsTrigger value="leave">Leave Requests</TabsTrigger>
           <TabsTrigger value="schedule">Work Schedule</TabsTrigger>
         </TabsList>
 
         {/* Absence Statistics */}
-        <TabsContent value="absence">
-          <Card>
-            <CardHeader>
-              <CardTitle>Absence & Attendance Statistics</CardTitle>
-              <CardDescription>
-                Your attendance record for the current year
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Sick Leave</h4>
-                  <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold">3</span>
-                    <span className="text-muted-foreground text-sm">
-                      / 10 days
-                    </span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="bg-yellow-500 h-full rounded-full"
-                      style={{ width: '30%' }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Vacation</h4>
-                  <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold">8</span>
-                    <span className="text-muted-foreground text-sm">
-                      / 20 days
-                    </span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="bg-blue-500 h-full rounded-full"
-                      style={{ width: '40%' }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Late Arrivals</h4>
-                  <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold">2</span>
-                    <span className="text-muted-foreground text-sm">
-                      instances
-                    </span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="bg-red-500 h-full rounded-full"
-                      style={{ width: '20%' }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* Timekeeping History */}
         <TabsContent value="timekeeping">
@@ -401,7 +435,7 @@ export default function ProfileEmployyee() {
                     </tr>
                   </thead>
                   <tbody>
-                    {timekeepingHistory.map((record, i) => (
+                    {timekeepingHistory.slice(0, 5).map((record, i) => (
                       <tr key={i} className="border-b">
                         <td className="py-3 px-2">{record.date}</td>
                         <td className="py-3 px-2">{record.clockIn}</td>
@@ -440,7 +474,7 @@ export default function ProfileEmployyee() {
                     <DialogHeader>
                       <DialogTitle>Complete Timekeeping History</DialogTitle>
                       <DialogDescription>
-                        Your detailed clock in/out records for the past 30 days
+                        Your detailed clock in/out records for this month
                       </DialogDescription>
                     </DialogHeader>
                     <div className="overflow-y-auto max-h-[60vh]">
@@ -473,8 +507,17 @@ export default function ProfileEmployyee() {
                               <td className="py-3 px-2">{record.hours}</td>
                               <td className="py-3 px-2">
                                 <Badge
-                                  variant="outline"
-                                  className="bg-green-50 text-green-700 border-green-200"
+                                  variant={
+                                    record.status === 'PRESENT'
+                                      ? 'success'
+                                      : record.status === 'NO ATTENDANCE'
+                                      ? 'destructive'
+                                      : record.status === 'LATE'
+                                      ? 'warning'
+                                      : record.status === 'EARLY'
+                                      ? 'warning'
+                                      : 'outline'
+                                  }
                                 >
                                   {record.status}
                                 </Badge>
@@ -492,7 +535,7 @@ export default function ProfileEmployyee() {
         </TabsContent>
 
         {/* Leave Request History */}
-        {/* <TabsContent value="leave">
+        <TabsContent value="leave">
           <Card>
             <CardHeader>
               <CardTitle>Leave Request History</CardTitle>
@@ -763,10 +806,10 @@ export default function ProfileEmployyee() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent> */}
+        </TabsContent>
 
         {/* Upcoming Work Schedule */}
-        {/* <TabsContent value="schedule">
+        <TabsContent value="schedule">
           <Card>
             <CardHeader>
               <CardTitle>Upcoming Work Schedule</CardTitle>
@@ -917,7 +960,7 @@ export default function ProfileEmployyee() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent> */}
+        </TabsContent>
       </Tabs>
     </div>
   );
