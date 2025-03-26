@@ -1,5 +1,7 @@
 import type React from 'react';
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 import {
   Dialog,
   DialogContent,
@@ -50,6 +52,8 @@ export function EditAttendDialog({
   onSuccess,
   attendance,
 }: EditAttendDialogProps) {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [storeManagerId, setStoreManagerId] = useState<number>(0);
   const [employeeId, setEmployeeId] = useState<number | null>(null);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -59,6 +63,12 @@ export function EditAttendDialog({
   const [shiftId, setShiftId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      setStoreManagerId(user.id);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (attendance) {
@@ -86,7 +96,7 @@ export function EditAttendDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!employeeId || !date || !shiftId) {
-      setError('Vui lòng điền đầy đủ thông tin bắt buộc.');
+      setError('Please fill in all required fields.');
       return;
     }
 
@@ -110,18 +120,19 @@ export function EditAttendDialog({
       note: note || null,
       date: new Date(date).toISOString(),
       shiftId: parseInt(shiftId),
+      storeManagerId: storeManagerId
     };
 
     try {
       await attendanceService.editTodayAttend(attendance?.id || 0, updatedAttend);
-      await alert.success('Cập nhật attendance thành công');
+      await alert.success('Successfully updated attendance');
       onOpenChange(false);
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
-      setError('Cập nhật attendance thất bại. Vui lòng thử lại.');
-      await alert.error('Không thể cập nhật attendance. Vui lòng thử lại');
+      setError('Failed to update attendance. Please try again.');
+      await alert.error('Could not update attendance. Please try again');
       console.error('Failed to update attendance:', error);
     } finally {
       setLoading(false);
@@ -141,15 +152,15 @@ export function EditAttendDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Chỉnh sửa Attendance</DialogTitle>
+          <DialogTitle>Edit Attendance</DialogTitle>
           <DialogDescription>
-            Chỉnh sửa thông tin chấm công. Vui lòng điền đầy đủ thông tin.
+            Edit attendance record. Please fill in all required information.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="employeeId">Mã nhân viên</Label>
+            <Label htmlFor="employeeId">Employee ID</Label>
             <Input
               id="employeeId"
               type="number"
@@ -160,10 +171,10 @@ export function EditAttendDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="shift">Ca làm việc</Label>
+            <Label htmlFor="shift">Work Shift</Label>
             <Select value={shiftId} onValueChange={handleShiftChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Chọn ca làm việc" />
+                <SelectValue placeholder="Select work shift" />
               </SelectTrigger>
               <SelectContent>
                 {SHIFTS.map((shift) => (
@@ -176,7 +187,7 @@ export function EditAttendDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="checkIn">Giờ check in</Label>
+            <Label htmlFor="checkIn">Check-in Time</Label>
             <Input
               id="checkIn"
               type="time"
@@ -186,7 +197,7 @@ export function EditAttendDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="checkOut">Giờ check out</Label>
+            <Label htmlFor="checkOut">Check-out Time</Label>
             <Input
               id="checkOut"
               type="time"
@@ -196,7 +207,7 @@ export function EditAttendDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="breakTime">Thời gian nghỉ (phút)</Label>
+            <Label htmlFor="breakTime">Break Time (minutes)</Label>
             <Input
               id="breakTime"
               type="number"
@@ -212,7 +223,7 @@ export function EditAttendDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="note">Ghi chú</Label>
+            <Label htmlFor="note">Note</Label>
             <Input
               id="note"
               value={note}
@@ -221,7 +232,7 @@ export function EditAttendDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="date">Ngày</Label>
+            <Label htmlFor="date">Date</Label>
             <Input
               id="date"
               type="date"
@@ -240,10 +251,10 @@ export function EditAttendDialog({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Hủy
+              Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
+              {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </form>

@@ -190,22 +190,18 @@ const Attendance = () => {
                     }) : '-'}
                   </td>
                   <td className="py-4 px-4 text-slate-800">
-                    {attendance.breakTime ? new Date(attendance.breakTime).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: true
-                    }) : '-'}
+                    {attendance.breakTime ? attendance.breakTime : '-'}
                   </td>
                   <td className="py-4 px-4 text-slate-800">{attendance.status}</td>
                   <td className="py-4 px-4 text-slate-800">
-                    {new Date(attendance.date).toLocaleDateString('vi-VN')}
+                    {new Date(attendance.date).toLocaleDateString('en-US')}
                   </td>
                   <td className="py-4 px-4 text-slate-800">{attendance.note || '-'}</td>
                   <td className="py-4 px-4 flex justify-center">
                     <button
                       onClick={() => handleEditClick(attendance)}
                       className="hover:text-primary"
+                      title="Edit attendance"
                     >
                       <svg
                         className="fill-current"
