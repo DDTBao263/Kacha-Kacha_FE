@@ -172,12 +172,12 @@ const LeaveRequest = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
-            <input
+            {/* <input
               type="text"
               placeholder="Search by Employee ID..."
               className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               onChange={handleSearchChange}
-            />
+            /> */}
           </div>
           <div className="ml-auto">
             <Select value={statusFilter} onValueChange={handleStatusChange}>

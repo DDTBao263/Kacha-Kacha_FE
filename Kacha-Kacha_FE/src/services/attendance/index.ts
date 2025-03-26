@@ -8,6 +8,7 @@ interface AttendancePayload {
     note: string | null;
     date: string;
     shiftId: number;
+    storeManagerId?: number;
 }
 
 export const attendanceService = {
@@ -38,7 +39,7 @@ export const attendanceService = {
     addAttendManual: (attendance: AttendancePayload) => {
         const jwt_Token = localStorage.getItem('jwtToken');
         return axiosPrivate.post(
-            '/api/attendance/manual',
+            '/api/attendance',
             attendance,
             {
                 headers: {

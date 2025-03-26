@@ -16,6 +16,7 @@ import {
 import { attendanceService } from '../../services/attendance';
 import { userService } from '../../services/user';
 import type { Attendance } from "../../types/attendance"
+import { Badge } from '../../components/ui/badge';
 
 const Attendance = () => {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -60,19 +61,31 @@ const Attendance = () => {
       console.log('API Response:', response);
 
       if (response.data?.content) {
-        const attendances = response.data.content.map((attendance: any) => ({
-          id: attendance.attendanceId,
-          employeeId: attendance.employeeId,
-          avatar: attendance.avatar || '',
-          email: attendance.email,
-          checkIn: attendance.checkInTime,
-          checkOut: attendance.checkOutTime,
-          breakTime: attendance.breakDurianTime,
-          status: attendance.status || 'PENDING',
-          date: attendance.date,
-          note: attendance.note || '',
-          shiftId: attendance.shiftId || 3001
-        }));
+        const attendances = response.data.content.map((attendance: any) => {
+          const formatTime = (timeStr: string | null) => {
+            if (!timeStr) return null;
+            // Lấy thời gian trực tiếp từ chuỗi ISO
+            const time = timeStr.split('T')[1]?.substring(0, 5); // Chỉ lấy HH:mm
+            return time || null;
+          };
+
+          return {
+            id: attendance.attendanceId,
+            employeeId: attendance.employeeId,
+            avatar: attendance.avatar || '',
+            email: attendance.email,
+            // Lưu cả dữ liệu gốc và dữ liệu đã format
+            checkInTime: attendance.checkInTime, // Dữ liệu gốc
+            checkOutTime: attendance.checkOutTime, // Dữ liệu gốc
+            checkIn: formatTime(attendance.checkInTime),
+            checkOut: formatTime(attendance.checkOutTime),
+            breakTime: attendance.breakDurianTime,
+            status: attendance.status || 'PENDING',
+            date: attendance.date,
+            note: attendance.note || '',
+            shiftId: attendance.shiftId || 3001
+          };
+        });
 
         setAttendances(attendances);
         setTotalPages(response.data.totalPages || 1);
@@ -94,18 +107,17 @@ const Attendance = () => {
   }, [currentPage, restaurantId, fetchAttendances]);
 
   const handleEditClick = (attendance: any) => {
-    // Format time values for the edit form
-    const formatTimeForInput = (dateTimeStr: string) => {
-      if (!dateTimeStr) return '';
-      const date = new Date(dateTimeStr);
-      return date.toTimeString().slice(0, 5); // Get HH:mm format
+    const formatTimeForInput = (timeStr: string | null) => {
+      if (!timeStr) return '';
+      return timeStr.split('T')[1]?.substring(0, 5) || ''; // Lấy HH:mm từ dữ liệu gốc
     };
 
     const formattedAttendance = {
       ...attendance,
-      checkIn: formatTimeForInput(attendance.checkIn),
-      checkOut: formatTimeForInput(attendance.checkOut),
-      date: new Date(attendance.date).toISOString().split('T')[0], // Format date as YYYY-MM-DD
+      checkIn: formatTimeForInput(attendance.checkInTime), // Sử dụng dữ liệu gốc
+      checkOut: formatTimeForInput(attendance.checkOutTime), // Sử dụng dữ liệu gốc
+      date: new Date(attendance.date).toISOString().split('T')[0],
+      shiftId: attendance.shiftId
     };
 
     setSelectedAttendance(formattedAttendance);
@@ -114,6 +126,21 @@ const Attendance = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'PRESENT':
+        return 'success';
+      case 'ABSENT':
+        return 'destructive';
+      case 'LATE':
+        return 'warning';
+      case 'PENDING':
+        return 'default';
+      default:
+        return 'default';
+    }
   };
 
   return (
@@ -174,32 +201,19 @@ const Attendance = () => {
                   <td className="py-4 px-4 text-slate-800">{attendance.employeeId}</td>
                   <td className="py-4 px-4 text-slate-800">{attendance.email}</td>
                   <td className="py-4 px-4 text-slate-800">
-                    {attendance.checkIn ? new Date(attendance.checkIn).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: true
-                    }) : '-'}
+                    {attendance.checkIn || '-'}
                   </td>
                   <td className="py-4 px-4 text-slate-800">
-                    {attendance.checkOut ? new Date(attendance.checkOut).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: true
-                    }) : '-'}
+                    {attendance.checkOut || '-'}
                   </td>
                   <td className="py-4 px-4 text-slate-800">
-                    {attendance.breakTime ? new Date(attendance.breakTime).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: true
-                    }) : '-'}
+                    {attendance.breakTime ? attendance.breakTime + ' minutes' : '-'}
                   </td>
-                  <td className="py-4 px-4 text-slate-800">{attendance.status}</td>
+                  <td className="py-4 px-4">
+                    <Badge variant={getStatusBadgeVariant(attendance.status)}>{attendance.status}</Badge>
+                  </td>
                   <td className="py-4 px-4 text-slate-800">
-                    {new Date(attendance.date).toLocaleDateString('vi-VN')}
+                    {new Date(attendance.date).toLocaleDateString('en-US')}
                   </td>
                   <td className="py-4 px-4 text-slate-800">{attendance.note || '-'}</td>
                   <td className="py-4 px-4 flex justify-center">

@@ -1,6 +1,8 @@
 import type React from 'react';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +23,7 @@ import {
   SelectValue,
 } from '../../components/ui/select';
 import { attendanceService } from '../../services/attendance/index';
+import { userService } from '../../services/user/index';
 
 interface AddAttendDialogProps {
   open: boolean;
@@ -40,6 +43,7 @@ export function AddAttendDialog({
   onOpenChange,
   onSuccess
 }: AddAttendDialogProps) {
+  const user = useSelector((state: RootState) => state.auth.user);
   const [employeeId, setEmployeeId] = useState<string>('');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -48,9 +52,39 @@ export function AddAttendDialog({
   const [shiftId, setShiftId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [storeManagerId, setStoreManagerId] = useState<number>(0);
 
   // Format date to YYYY-MM-DD
   const today = new Date().toISOString().split('T')[0];
+
+  // Lấy storeManagerId khi component mount hoặc khi user thay đổi
+  useEffect(() => {
+    const getStoreManagerId = async () => {
+      if (!user?.id) {
+        console.log('Không có thông tin user từ Redux store');
+        return;
+      }
+
+      try {
+        console.log('User ID từ Redux:', user.id);
+        const response = await userService.getUserByID(user.id, 'STORE_MANAGER');
+        console.log('Response từ API getUserByID:', response);
+
+        // Dựa trên cấu trúc dữ liệu từ StoreDash.tsx
+        if (response?.data?.data) {
+          console.log('Store Manager Data:', response.data.data);
+          setStoreManagerId(response.data.data.userId || 0);
+          console.log('Đã set storeManagerId:', response.data.data.userId || 0);
+        } else {
+          console.log('Không tìm thấy data trong response');
+        }
+      } catch (error) {
+        console.error('Failed to get store manager id:', error);
+      }
+    };
+
+    getStoreManagerId();
+  }, [user]);
 
   const resetForm = () => {
     setEmployeeId('');
@@ -89,20 +123,24 @@ export function AddAttendDialog({
       breakTime: breakTime || 0,
       note: note || null,
       date: new Date(today).toISOString(),
-      shiftId: parseInt(shiftId)
+      shiftId: parseInt(shiftId),
+      storeManagerId: storeManagerId || 0
     };
+
+    console.log('Giá trị storeManagerId trước khi gửi:', storeManagerId);
+    console.log('Dữ liệu attendance sẽ được gửi:', newAttend);
 
     try {
       await attendanceService.addAttendManual(newAttend);
-      await alert.success('Thêm mới thành công');
+      await alert.success('Add success');
       onOpenChange(false);
       resetForm();
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
-      setError('Thêm  thất bại. Vui lòng thử lại.');
-      await alert.error('Không thể thêm . Vui lòng thử lại');
+      setError('Try again');
+      await alert.error('Please try again');
       console.error(error);
     } finally {
       setLoading(false);
@@ -122,29 +160,29 @@ export function AddAttendDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Thêm Attendance Mới</DialogTitle>
+          <DialogTitle>Add New Attendance</DialogTitle>
           <DialogDescription>
-            Tạo bản ghi chấm công mới. Vui lòng điền đầy đủ thông tin.
+            Create a new attendance record. Please fill in all required information.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="employeeId">Mã nhân viên</Label>
+            <Label htmlFor="employeeId">Employee ID</Label>
             <Input
               id="employeeId"
               value={employeeId}
               onChange={(e) => setEmployeeId(e.target.value)}
-              placeholder="Nhập mã nhân viên"
+              placeholder="Enter employee ID"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="shift">Ca làm việc</Label>
+            <Label htmlFor="shift">Work Shift</Label>
             <Select value={shiftId} onValueChange={handleShiftChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Chọn ca làm việc" />
+                <SelectValue placeholder="Select work shift" />
               </SelectTrigger>
               <SelectContent>
                 {SHIFTS.map((shift) => (
@@ -157,29 +195,29 @@ export function AddAttendDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="checkIn">Giờ check in</Label>
+            <Label htmlFor="checkIn">Check-in Time</Label>
             <Input
               id="checkIn"
               type="time"
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
-              placeholder="Nhập giờ check in"
+              placeholder="Enter check-in time"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="checkOut">Giờ check out</Label>
+            <Label htmlFor="checkOut">Check-out Time</Label>
             <Input
               id="checkOut"
               type="time"
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
-              placeholder="Nhập giờ check out"
+              placeholder="Enter check-out time"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="breakTime">Thời gian nghỉ (phút)</Label>
+            <Label htmlFor="breakTime">Break Time (minutes)</Label>
             <Input
               id="breakTime"
               type="number"
@@ -191,22 +229,22 @@ export function AddAttendDialog({
                   setBreakTime(value);
                 }
               }}
-              placeholder="Nhập thời gian nghỉ"
+              placeholder="Enter break time"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="note">Ghi chú</Label>
+            <Label htmlFor="note">Note</Label>
             <Input
               id="note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Nhập ghi chú"
+              placeholder="Enter note"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="date">Ngày</Label>
+            <Label htmlFor="date">Date</Label>
             <Input
               id="date"
               type="date"
@@ -225,10 +263,10 @@ export function AddAttendDialog({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Hủy
+              Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Đang thêm...' : 'Thêm mới'}
+              {loading ? 'Adding...' : 'Add new'}
             </Button>
           </DialogFooter>
         </form>
