@@ -18,13 +18,25 @@ import { userService } from '../../services/user';
 import type { Attendance } from "../../types/attendance"
 import { Badge } from '../../components/ui/badge';
 
+// Interface cho attendance để sử dụng trong component
+interface AttendanceDetail {
+  id: number;
+  employeeId: number;
+  checkIn: string;
+  checkOut: string;
+  breakTime: number;
+  note: string;
+  date: string;
+  shiftId: number;
+}
+
 const Attendance = () => {
   const user = useSelector((state: RootState) => state.auth.user);
 
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [selectedAttendance, setSelectedAttendance] = useState<AttendanceDetail | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
@@ -107,18 +119,21 @@ const Attendance = () => {
   }, [currentPage, restaurantId, fetchAttendances]);
 
   const handleEditClick = (attendance: any) => {
-    const formatTimeForInput = (timeStr: string | null) => {
-      if (!timeStr) return '';
-      return timeStr.split('T')[1]?.substring(0, 5) || ''; // Lấy HH:mm từ dữ liệu gốc
-    };
+    console.log('Dữ liệu attendance trước khi chỉnh sửa:', attendance);
 
+    // Đảm bảo dùng dữ liệu checkInTime và checkOutTime (dữ liệu gốc ISO)
     const formattedAttendance = {
-      ...attendance,
-      checkIn: formatTimeForInput(attendance.checkInTime), // Sử dụng dữ liệu gốc
-      checkOut: formatTimeForInput(attendance.checkOutTime), // Sử dụng dữ liệu gốc
+      id: attendance.id,
+      employeeId: attendance.employeeId,
+      checkIn: attendance.checkIn || '', // Dùng giá trị đã được format sẵn
+      checkOut: attendance.checkOut || '', // Dùng giá trị đã được format sẵn
+      breakTime: attendance.breakTime || 0,
+      note: attendance.note || '',
       date: new Date(attendance.date).toISOString().split('T')[0],
       shiftId: attendance.shiftId
     };
+
+    console.log('Dữ liệu attendance sau khi format:', formattedAttendance);
 
     setSelectedAttendance(formattedAttendance);
     setEditDialogOpen(true);
@@ -155,12 +170,12 @@ const Attendance = () => {
               className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             /> */}
           </div>
-          <Button
+          {/* <Button
             onClick={() => setIsAddDialogOpen(true)}
             className="ml-auto py-6 px-10"
           >
             Add Attendance
-          </Button>
+          </Button> */}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">

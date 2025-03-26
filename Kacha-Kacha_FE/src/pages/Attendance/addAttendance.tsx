@@ -54,8 +54,9 @@ export function AddAttendDialog({
   const [error, setError] = useState<string | null>(null);
   const [storeManagerId, setStoreManagerId] = useState<number>(0);
 
-  // Format date to YYYY-MM-DD
-  const today = new Date().toISOString().split('T')[0];
+  // Lấy ngày hiện tại ở định dạng YYYY-MM-DD không phụ thuộc vào múi giờ
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   // Lấy storeManagerId khi component mount hoặc khi user thay đổi
   useEffect(() => {
@@ -110,10 +111,45 @@ export function AddAttendDialog({
     // Format datetime to ISO string
     const formatDateTime = (date: string, time: string | null) => {
       if (!time) return null;
-      const [hours, minutes] = time.split(':');
-      const dateObj = new Date(date);
-      dateObj.setHours(parseInt(hours), parseInt(minutes), 0);
-      return dateObj.toISOString();
+
+      try {
+        console.log('====== START DATETIME CONVERSION (ADD) =====');
+        // Lấy giờ và phút từ chuỗi thời gian input (HH:MM)
+        const [hoursStr, minutesStr] = time.split(':');
+
+        // Convert to integers
+        let hours = parseInt(hoursStr, 10);
+        const minutes = parseInt(minutesStr, 10);
+
+        console.log(`Original input time: ${time}, hours: ${hours}, minutes: ${minutes}`);
+
+        // Phân tích ngày tháng từ chuỗi date (YYYY-MM-DD)
+        const [yearStr, monthStr, dayStr] = date.split('-');
+        const year = parseInt(yearStr, 10);
+        const month = parseInt(monthStr, 10) - 1; // Tháng trong JavaScript bắt đầu từ 0
+        const day = parseInt(dayStr, 10);
+
+        console.log(`Date components: year: ${year}, month: ${month}, day: ${day}`);
+
+        // Khác với edit, cần điều chỉnh múi giờ khi add để phù hợp với cách server xử lý
+        // Áp dụng múi giờ Z (UTC) để đảm bảo giờ được lưu chính xác
+        const padZero = (num: number): string => num.toString().padStart(2, '0');
+        const isoString = `${year}-${padZero(month + 1)}-${padZero(day)}T${padZero(hours)}:${padZero(minutes)}:00Z`;
+
+        console.log(`Custom ISO string with Timezone Z (ADD): ${isoString}`);
+
+        // Chuyển đổi thành đối tượng Date để kiểm tra 
+        const dateObj = new Date(isoString);
+        console.log(`Converted back to Date object: ${dateObj.toString()}`);
+        console.log(`Standard ISO: ${dateObj.toISOString()}`);
+        console.log('====== END DATETIME CONVERSION (ADD) =====');
+
+        // Trả về chuỗi ISO đã tạo
+        return dateObj.toISOString();
+      } catch (error) {
+        console.error('Error formatting date time:', error);
+        return null;
+      }
     };
 
     const newAttend = {
@@ -122,7 +158,7 @@ export function AddAttendDialog({
       checkOut: checkOut ? formatDateTime(today, checkOut) : null,
       breakTime: breakTime || 0,
       note: note || null,
-      date: new Date(today).toISOString(),
+      date: formatDateTime(today, "00:00") || new Date(today).toISOString(),
       shiftId: parseInt(shiftId),
       storeManagerId: storeManagerId || 0
     };

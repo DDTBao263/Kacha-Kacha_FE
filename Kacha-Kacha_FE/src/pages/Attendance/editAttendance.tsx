@@ -63,11 +63,29 @@ export function EditAttendDialog({
   useEffect(() => {
     if (attendance) {
       setEmployeeId(attendance.employeeId);
+
+      // Sử dụng trực tiếp giá trị checkIn và checkOut đã được format từ component Attendance
       setCheckIn(attendance.checkIn || '');
       setCheckOut(attendance.checkOut || '');
+
       setBreakTime(attendance.breakTime || 0);
       setNote(attendance.note || '');
-      setDate(attendance.date || new Date().toISOString().split('T')[0]);
+
+      // Xử lý ngày tháng để tránh vấn đề múi giờ
+      if (attendance.date) {
+        const dateObj = new Date(attendance.date);
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        setDate(`${year}-${month}-${day}`);
+      } else {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        setDate(`${year}-${month}-${day}`);
+      }
+
       setShiftId(attendance.shiftId?.toString() || '');
 
       // Log để debug
@@ -78,7 +96,14 @@ export function EditAttendDialog({
       setCheckOut('');
       setBreakTime(0);
       setNote('');
-      setDate(new Date().toISOString().split('T')[0]);
+
+      // Khởi tạo ngày với định dạng YYYY-MM-DD
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      setDate(`${year}-${month}-${day}`);
+
       setShiftId('');
     }
   }, [attendance]);
@@ -96,11 +121,50 @@ export function EditAttendDialog({
     // Format datetime to ISO string
     const formatDateTime = (date: string, time: string | null) => {
       if (!time) return null;
-      const [hours, minutes] = time.split(':');
-      const dateObj = new Date(date);
-      dateObj.setHours(parseInt(hours), parseInt(minutes), 0);
-      return dateObj.toISOString();
+
+      try {
+        console.log('====== START DATETIME CONVERSION (EDIT) =====');
+        // Lấy giờ và phút từ chuỗi thời gian input (HH:MM)
+        const [hoursStr, minutesStr] = time.split(':');
+
+        // Convert to integers
+        let hours = parseInt(hoursStr, 10);
+        const minutes = parseInt(minutesStr, 10);
+
+        console.log(`Original input time: ${time}, hours: ${hours}, minutes: ${minutes}`);
+
+        // Phân tích ngày tháng từ chuỗi date (YYYY-MM-DD)
+        const [yearStr, monthStr, dayStr] = date.split('-');
+        const year = parseInt(yearStr, 10);
+        const month = parseInt(monthStr, 10) - 1; // Tháng trong JavaScript bắt đầu từ 0
+        const day = parseInt(dayStr, 10);
+
+        console.log(`Date components: year: ${year}, month: ${month}, day: ${day}`);
+
+        // Khi edit, sử dụng định dạng -00:00 để đảm bảo giờ không bị thay đổi
+        // Điều này phù hợp với cách server xử lý khi cập nhật
+        const padZero = (num: number): string => num.toString().padStart(2, '0');
+        const isoString = `${year}-${padZero(month + 1)}-${padZero(day)}T${padZero(hours)}:${padZero(minutes)}:00-00:00`;
+
+        console.log(`Custom ISO string with Timezone -00:00 (EDIT): ${isoString}`);
+
+        // Chuyển đổi thành đối tượng Date để kiểm tra 
+        const dateObj = new Date(isoString);
+        console.log(`Converted back to Date object: ${dateObj.toString()}`);
+        console.log(`Standard ISO: ${dateObj.toISOString()}`);
+        console.log('====== END DATETIME CONVERSION (EDIT) =====');
+
+        return dateObj.toISOString();
+      } catch (error) {
+        console.error('Error formatting date time:', error);
+        return null;
+      }
     };
+
+    // Giữ nguyên giá trị shiftId từ dữ liệu ban đầu nếu không được thay đổi
+    // vì UI đã ẩn phần chọn Work Shift
+    const currentShiftId = parseInt(shiftId) || attendance?.shiftId || 3001;
+    console.log('Using shiftId:', currentShiftId);
 
     const updatedAttend = {
       employeeId,
@@ -108,9 +172,11 @@ export function EditAttendDialog({
       checkOut: checkOut ? formatDateTime(date, checkOut) : null,
       breakTime: breakTime || 0,
       note: note || null,
-      date: new Date(date).toISOString(),
-      shiftId: attendance?.shiftId || 3001 // Use existing shiftId or default to 3001
+      date: formatDateTime(date, "00:00") || new Date(date).toISOString(),
+      shiftId: currentShiftId
     };
+
+    console.log('Updating attendance with data:', updatedAttend);
 
     try {
       await attendanceService.editTodayAttend(attendance?.id || 0, updatedAttend);
