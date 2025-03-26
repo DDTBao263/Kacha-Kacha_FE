@@ -75,6 +75,34 @@ export const leaveService = {
     });
   },
 
-  // Push To Mobile
+  // Lấy thông tin chi tiết nhân viên
+  getEmployeeDetail: async (employeeId: number) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(`/api/employees/${employeeId}`, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token}`,
+      },
+    });
+  },
 
+  // Push To Mobile
+  sendNotification: async (data: {
+    recipientToken: string;
+    title: string;
+    body: string;
+    image?: string;
+    data?: {
+      additionalProp1?: string;
+      additionalProp2?: string;
+      additionalProp3?: string;
+    };
+  }) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.post('/api/notification/send', data, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  },
 }

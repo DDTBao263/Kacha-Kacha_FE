@@ -112,33 +112,71 @@ const LeaveRequest = () => {
     setCurrentPage(1);
   };
 
-  const handleApprove = async (leaveRequestId: number) => {
+  const handleApprove = async (leaveRequestId: number, employeeId: number) => {
     try {
+      console.log('Employee ID when approving:', employeeId);
       const response = await leaveService.approveLeave(leaveRequestId);
       if (response.data.status === 0) {
-        await alert.success("Đã duyệt đơn xin nghỉ");
+        // Lấy thông tin nhân viên để lấy deviceToken
+        const employeeResponse = await leaveService.getEmployeeDetail(employeeId);
+        const deviceToken = employeeResponse.data.data.deviceToken;
+        console.log('Device Token when approving:', deviceToken);
+
+        if (deviceToken) {
+          // Gửi thông báo
+          await leaveService.sendNotification({
+            recipientToken: deviceToken,
+            title: "Leave Request Approved",
+            body: "Your leave request has been approved by the manager",
+            data: {
+              additionalProp1: leaveRequestId.toString(),
+              additionalProp2: "APPROVED"
+            }
+          });
+        }
+
+        await alert.success("Leave request has been approved successfully");
         fetchLeaveRequests(currentPage, 10, searchQuery);
       } else {
-        await alert.error(response.data.desc || "Có lỗi xảy ra khi duyệt đơn xin nghỉ");
+        await alert.error(response.data.desc || "Error occurred while approving leave request");
       }
     } catch (error) {
       console.error('Error approving leave:', error);
-      await alert.error("Có lỗi xảy ra khi duyệt đơn xin nghỉ");
+      await alert.error("Error occurred while approving leave request");
     }
   };
 
-  const handleReject = async (leaveRequestId: number) => {
+  const handleReject = async (leaveRequestId: number, employeeId: number) => {
     try {
+      console.log('Employee ID when rejecting:', employeeId);
       const response = await leaveService.rejectLeave(leaveRequestId);
       if (response.data.status === 0) {
-        await alert.success("Đã từ chối đơn xin nghỉ");
+        // Lấy thông tin nhân viên để lấy deviceToken
+        const employeeResponse = await leaveService.getEmployeeDetail(employeeId);
+        const deviceToken = employeeResponse.data.data.deviceToken;
+        console.log('Device Token when rejecting:', deviceToken);
+
+        if (deviceToken) {
+          // Gửi thông báo
+          await leaveService.sendNotification({
+            recipientToken: deviceToken,
+            title: "Leave Request Rejected",
+            body: "Your leave request has been rejected by the manager",
+            data: {
+              additionalProp1: leaveRequestId.toString(),
+              additionalProp2: "REJECTED"
+            }
+          });
+        }
+
+        await alert.success("Leave request has been rejected successfully");
         fetchLeaveRequests(currentPage, 10, searchQuery);
       } else {
-        await alert.error(response.data.desc || "Có lỗi xảy ra khi từ chối đơn xin nghỉ");
+        await alert.error(response.data.desc || "Error occurred while rejecting leave request");
       }
     } catch (error) {
       console.error('Error rejecting leave:', error);
-      await alert.error("Có lỗi xảy ra khi từ chối đơn xin nghỉ");
+      await alert.error("Error occurred while rejecting leave request");
     }
   };
 
@@ -172,12 +210,12 @@ const LeaveRequest = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
-            <input
+            {/* <input
               type="text"
               placeholder="Search by Employee ID..."
               className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               onChange={handleSearchChange}
-            />
+            /> */}
           </div>
           <div className="ml-auto">
             <Select value={statusFilter} onValueChange={handleStatusChange}>
@@ -226,7 +264,7 @@ const LeaveRequest = () => {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => handleApprove(request.leaveRequestId)}
+                          onClick={() => handleApprove(request.leaveRequestId, request.employeeId)}
                           className="h-8 w-8 text-green-600 hover:text-green-700"
                         >
                           <Check className="h-4 w-4" />
@@ -234,7 +272,7 @@ const LeaveRequest = () => {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => handleReject(request.leaveRequestId)}
+                          onClick={() => handleReject(request.leaveRequestId, request.employeeId)}
                           className="h-8 w-8 text-red-600 hover:text-red-700"
                         >
                           <X className="h-4 w-4" />
