@@ -11,16 +11,18 @@ import {
   PaginationPrevious,
 } from '../../components/ui/pagination';
 import { AddStoreDialog } from './NewStore';
-import { debounce } from 'lodash';
+import { debounce, first } from 'lodash';
 import { UpdateStoreDialog } from './UpdateStore';
 
 interface Store {
-  id: string;
+  id: number;
   name: string;
   location: string;
   phoneNumber: string;
   status: string;
-  storeManagerId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 const Stores = () => {
@@ -48,6 +50,7 @@ const Stores = () => {
   ) => {
     try {
       const response = await storeService.getAllStores(page - 1, size, keyword);
+      console.log('Response:', response);
 
       const content = response.data.content || response.data.data?.content;
       const totalPages =
@@ -57,14 +60,26 @@ const Stores = () => {
       // if (!Array.isArray(content)) {
       //   throw new Error('API không trả về content hợp lệ');
       // }
-      const storesData = content.map((store: any) => ({
-        id: store.id,
-        name: `Kacha-Kacha ${store.location}`,
-        location: store.location,
-        phoneNumber: store.phoneNumber,
-        status: store.status,
-      }));
+      const storesData = content.map((store: any) => {
+        const managerName = store.storeManager?.name || ''; // Kiểm tra storeManager có tồn tại không
+        const nameParts = managerName.trim().split(' ');
 
+        return {
+          id: store.id,
+          name: `Kacha-Kacha ${store.location}`,
+          location: store.location,
+          phoneNumber: store.phoneNumber,
+          status: store.status,
+          firstName:
+            nameParts.length > 1
+              ? nameParts[nameParts.length - 1]
+              : managerName,
+          lastName:
+            nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : '',
+          email: store.storeManager?.email || '',
+        };
+      });
+      console.log('Stores:', storesData);
       setStores(storesData);
       setTotalPages(totalPages);
     } catch (error) {
