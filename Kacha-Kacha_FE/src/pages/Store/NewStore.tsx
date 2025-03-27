@@ -25,12 +25,15 @@ interface AddStoreDialogProps {
 export function AddStoreDialog({ open, onOpenChange }: AddStoreDialogProps) {
   const [location, setLocation] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!location || !phoneNumber) {
+    if (!location || !phoneNumber || !firstName || !lastName || !email) {
       setError('Please fill in all fields.');
       return;
     }
@@ -41,7 +44,10 @@ export function AddStoreDialog({ open, onOpenChange }: AddStoreDialogProps) {
     const newStore = {
       location,
       phoneNumber,
-      status: 'CLOSED',
+      status: 'OPEN',
+      firstName,
+      lastName,
+      email,
     };
     console.log(newStore);
 
@@ -50,6 +56,9 @@ export function AddStoreDialog({ open, onOpenChange }: AddStoreDialogProps) {
       onOpenChange(false);
       setLocation('');
       setPhoneNumber('');
+      setFirstName('');
+      setLastName('');
+      setEmail('');
       window.dispatchEvent(new Event('refreshStores'));
     } catch (error) {
       setError('Failed to add store. Please try again.');
@@ -88,6 +97,39 @@ export function AddStoreDialog({ open, onOpenChange }: AddStoreDialogProps) {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="Enter phone number"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="firstName">First Name</Label>
+            <Input
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Enter first name of store manager"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter last name of store manager"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter email of store manager"
               required
             />
           </div>

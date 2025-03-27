@@ -157,6 +157,7 @@ export function UpdateStoreDialog({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled
             />
           </div>
 

@@ -35,6 +35,9 @@ export const storeService = {
     location: string;
     phoneNumber: string;
     status: string;
+    firstName: string;
+    lastName: string;
+    email: string;
   }) => {
     const jwt_Token = localStorage.getItem('jwtToken');
     return axiosPrivate.post('/api/restaurants', newStore, {
