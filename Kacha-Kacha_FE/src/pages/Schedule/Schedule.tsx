@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { addDays, format, startOfWeek } from 'date-fns';
+import { addDays, format, startOfWeek, isBefore, startOfDay } from 'date-fns';
 import { Calendar, Clock, Users } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
@@ -29,6 +29,11 @@ export default function Schedule() {
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start week on Monday
 
+  const isDateValid = useCallback((date: Date) => {
+    const today = startOfDay(new Date());
+    return !isBefore(date, today);
+  }, []);
+
   const handlePreviousWeek = useCallback(() => {
     setCurrentDate(addDays(currentDate, -7));
   }, [currentDate]);
@@ -38,10 +43,14 @@ export default function Schedule() {
   }, [currentDate]);
 
   const handleAddShift = useCallback((day: Date, employeeId: number) => {
+    if (!isDateValid(day)) {
+      alert('Cannot add schedule for past or current date');
+      return;
+    }
     setSelectedDay(day);
     setSelectedEmployee(employeeId);
     setShowShiftForm(true);
-  }, []);
+  }, [isDateValid]);
 
   const handleSaveShift = useCallback((data: any) => {
     console.log('Saving shift:', data);

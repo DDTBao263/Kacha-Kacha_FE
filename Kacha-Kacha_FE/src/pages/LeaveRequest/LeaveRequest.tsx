@@ -189,9 +189,11 @@ const LeaveRequest = () => {
                 recipientToken: deviceToken,
                 title: "Leave Request Approved",
                 body: "Your leave request has been approved by the manager",
+                image: "",
                 data: {
                   additionalProp1: leaveRequestId.toString(),
-                  additionalProp2: "APPROVED"
+                  additionalProp2: "APPROVED",
+                  additionalProp3: ""
                 }
               });
               console.log('Notification sent successfully');
@@ -243,9 +245,11 @@ const LeaveRequest = () => {
                 recipientToken: deviceToken,
                 title: "Leave Request Rejected",
                 body: "Your leave request has been rejected by the manager",
+                image: "",
                 data: {
                   additionalProp1: leaveRequestId.toString(),
-                  additionalProp2: "REJECTED"
+                  additionalProp2: "REJECTED",
+                  additionalProp3: ""
                 }
               });
               console.log('Notification sent successfully');
