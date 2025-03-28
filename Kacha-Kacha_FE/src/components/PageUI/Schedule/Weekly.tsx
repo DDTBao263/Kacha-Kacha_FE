@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { format, addDays } from 'date-fns';
+import { format, addDays, isBefore, startOfDay } from 'date-fns';
 import { employeeService } from '../../../services/employee';
 import { scheduleService } from '../../../services/schedule';
 import { userService } from '../../../services/user';
@@ -47,6 +47,11 @@ export function WeeklySchedule({ weekStart, onAddShift }: WeeklyScheduleProps) {
   const [totalPages, setTotalPages] = useState(1);
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
   const user = useSelector((state: RootState) => state.auth.user);
+
+  const isDateValid = useCallback((date: Date) => {
+    const today = startOfDay(new Date());
+    return !isBefore(date, today);
+  }, []);
 
   const fetchSchedule = useCallback(async (
     page: number,
@@ -166,15 +171,17 @@ export function WeeklySchedule({ weekStart, onAddShift }: WeeklyScheduleProps) {
                         </Tooltip>
                       </TooltipProvider>
                     ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute bottom-1 right-1 h-6 w-6 p-0"
-                        onClick={() => onAddShift(day, employee.employeeId)}
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span className="sr-only">Add shift</span>
-                      </Button>
+                      isDateValid(day) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute bottom-1 right-1 h-6 w-6 p-0"
+                          onClick={() => onAddShift(day, employee.employeeId)}
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span className="sr-only">Add shift</span>
+                        </Button>
+                      )
                     )}
                   </div>
                 );

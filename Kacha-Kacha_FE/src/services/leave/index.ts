@@ -90,11 +90,11 @@ export const leaveService = {
     recipientToken: string;
     title: string;
     body: string;
-    image?: string;
-    data?: {
-      additionalProp1?: string;
-      additionalProp2?: string;
-      additionalProp3?: string;
+    image: string;
+    data: {
+      additionalProp1: string;
+      additionalProp2: string;
+      additionalProp3: string;
     };
   }) => {
     const jwt_Token = localStorage.getItem('jwtToken');

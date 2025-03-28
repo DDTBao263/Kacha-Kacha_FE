@@ -15,7 +15,7 @@ export const attendanceService = {
     getTodayAttendance: (restaurantId: number, page: number, limit: number) => {
         const jwt_Token = localStorage.getItem('jwtToken');
         return axiosPrivate.get(
-            `/api/attendance/today/restaurant/${restaurantId}?page=${page}&limit=${limit}&restaurantId=${restaurantId}`,
+            `/api/attendance?page=${page}&limit=${limit}&restaurantId=${restaurantId}`,
             {
                 headers: {
                     Authorization: `Bearer ${jwt_Token}`,
@@ -52,7 +52,7 @@ export const attendanceService = {
     editTodayAttend: (id: number, attendance: AttendancePayload) => {
         const jwt_Token = localStorage.getItem('jwtToken');
         return axiosPrivate.put(
-            `/api/attendance/${id}`,
+            `/api/attendance/today/${id}`,
             attendance,
             {
                 headers: {
@@ -61,4 +61,16 @@ export const attendanceService = {
             }
         );
     },
+
+    getShift: (id: number) => {
+        const jwt_Token = localStorage.getItem('jwtToken');
+        return axiosPrivate.get(`/api/shift/today/employee/${id}`, {
+            headers: {
+                Authorization: `Bearer ${jwt_Token}`,
+            },
+        });
+    },
+
+
+
 };

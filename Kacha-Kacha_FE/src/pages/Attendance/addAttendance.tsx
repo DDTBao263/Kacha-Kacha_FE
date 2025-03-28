@@ -131,12 +131,11 @@ export function AddAttendDialog({
 
         console.log(`Date components: year: ${year}, month: ${month}, day: ${day}`);
 
-        // Khác với edit, cần điều chỉnh múi giờ khi add để phù hợp với cách server xử lý
-        // Áp dụng múi giờ Z (UTC) để đảm bảo giờ được lưu chính xác
+        // Sử dụng định dạng +07:00 (múi giờ Việt Nam) để đảm bảo giờ được lưu chính xác
         const padZero = (num: number): string => num.toString().padStart(2, '0');
-        const isoString = `${year}-${padZero(month + 1)}-${padZero(day)}T${padZero(hours)}:${padZero(minutes)}:00Z`;
+        const isoString = `${year}-${padZero(month + 1)}-${padZero(day)}T${padZero(hours)}:${padZero(minutes)}:00+07:00`;
 
-        console.log(`Custom ISO string with Timezone Z (ADD): ${isoString}`);
+        console.log(`Custom ISO string with Timezone +07:00 (ADD): ${isoString}`);
 
         // Chuyển đổi thành đối tượng Date để kiểm tra 
         const dateObj = new Date(isoString);
@@ -144,8 +143,8 @@ export function AddAttendDialog({
         console.log(`Standard ISO: ${dateObj.toISOString()}`);
         console.log('====== END DATETIME CONVERSION (ADD) =====');
 
-        // Trả về chuỗi ISO đã tạo
-        return dateObj.toISOString();
+        // Trả về chuỗi ISO đã tạo với định dạng múi giờ +07:00
+        return isoString;
       } catch (error) {
         console.error('Error formatting date time:', error);
         return null;

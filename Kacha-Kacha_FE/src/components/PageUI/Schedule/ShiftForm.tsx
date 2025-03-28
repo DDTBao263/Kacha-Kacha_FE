@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { format } from "date-fns"
+import { format, startOfDay, addDays } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { useSelector } from 'react-redux'
 import { RootState } from "../../../redux/store"
@@ -53,6 +53,8 @@ export function ShiftForm({ selectedEmployee, selectedDay, onClose, onSave }: Sh
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const user = useSelector((state: RootState) => state.auth.user)
+
+  const minDate = addDays(startOfDay(new Date()), 1); // Tomorrow
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -226,6 +228,10 @@ export function ShiftForm({ selectedEmployee, selectedDay, onClose, onSave }: Sh
                         mode="single"
                         selected={date}
                         onSelect={setDate}
+                        disabled={(date) => {
+                          const today = startOfDay(new Date());
+                          return date < today || date.getTime() === today.getTime();
+                        }}
                         initialFocus
                         className="rounded-md border shadow-sm"
                         classNames={{

@@ -141,12 +141,12 @@ export function EditAttendDialog({
 
         console.log(`Date components: year: ${year}, month: ${month}, day: ${day}`);
 
-        // Khi edit, sử dụng định dạng -00:00 để đảm bảo giờ không bị thay đổi
-        // Điều này phù hợp với cách server xử lý khi cập nhật
+        // Khi edit, sử dụng định dạng +07:00 để đảm bảo giờ không bị thay đổi
+        // GMT+7 là múi giờ của Việt Nam
         const padZero = (num: number): string => num.toString().padStart(2, '0');
-        const isoString = `${year}-${padZero(month + 1)}-${padZero(day)}T${padZero(hours)}:${padZero(minutes)}:00-00:00`;
+        const isoString = `${year}-${padZero(month + 1)}-${padZero(day)}T${padZero(hours)}:${padZero(minutes)}:00+07:00`;
 
-        console.log(`Custom ISO string with Timezone -00:00 (EDIT): ${isoString}`);
+        console.log(`Custom ISO string with Timezone +07:00 (EDIT): ${isoString}`);
 
         // Chuyển đổi thành đối tượng Date để kiểm tra 
         const dateObj = new Date(isoString);
@@ -154,7 +154,7 @@ export function EditAttendDialog({
         console.log(`Standard ISO: ${dateObj.toISOString()}`);
         console.log('====== END DATETIME CONVERSION (EDIT) =====');
 
-        return dateObj.toISOString();
+        return isoString;
       } catch (error) {
         console.error('Error formatting date time:', error);
         return null;
