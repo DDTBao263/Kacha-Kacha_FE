@@ -19,7 +19,13 @@ interface LeaveResponse {
 
 export const leaveService = {
   // Lấy danh sách đơn xin nghỉ theo nhà hàng và phân trang
-  getLeavesByRestaurant: async (page: number, size: number, restaurantId: number, keyword?: string, status?: string) => {
+  getLeavesByRestaurant: async (
+    page: number,
+    size: number,
+    restaurantId: number,
+    keyword?: string,
+    status?: string,
+  ) => {
     const jwt_Token = localStorage.getItem('jwtToken');
     let url = `/api/application?page=${page}&size=${size}&restaurantId=${restaurantId}`;
     if (keyword) {
@@ -45,34 +51,50 @@ export const leaveService = {
   }) => {
     const jwt_Token = localStorage.getItem('jwtToken');
     const { employeeId, ...leaveData } = newLeave;
-    return axiosPrivate.post(`/api/application/request?employeeId=${employeeId}`, leaveData, {
-      headers: {
-        Authorization: `Bearer ${jwt_Token}`,
-        'Content-Type': 'application/json',
+    return axiosPrivate.post(
+      `/api/application/request?employeeId=${employeeId}`,
+      leaveData,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
   },
 
-  //Duyệt đơn xin nghỉ 
-  approveLeave: async (leaveRequestId: number): Promise<{ data: LeaveResponse }> => {
+  //Duyệt đơn xin nghỉ
+  approveLeave: async (
+    leaveRequestId: number,
+  ): Promise<{ data: LeaveResponse }> => {
     const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.put(`/api/application/${leaveRequestId}/approve?id=${leaveRequestId}`, null, {
-      headers: {
-        Authorization: `Bearer ${jwt_Token}`,
-        'Content-Type': 'application/json',
+    return axiosPrivate.put(
+      `/api/application/${leaveRequestId}/approve?id=${leaveRequestId}`,
+      null,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
   },
 
-  //Từ chối đơn xin nghỉ 
-  rejectLeave: async (leaveRequestId: number): Promise<{ data: LeaveResponse }> => {
+  //Từ chối đơn xin nghỉ
+  rejectLeave: async (
+    leaveRequestId: number,
+  ): Promise<{ data: LeaveResponse }> => {
     const jwt_Token = localStorage.getItem('jwtToken');
-    return axiosPrivate.put(`/api/application/${leaveRequestId}/reject?id=${leaveRequestId}`, null, {
-      headers: {
-        Authorization: `Bearer ${jwt_Token}`,
-        'Content-Type': 'application/json',
+    return axiosPrivate.put(
+      `/api/application/${leaveRequestId}/reject?id=${leaveRequestId}`,
+      null,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
   },
 
   // Lấy thông tin chi tiết nhân viên
@@ -105,4 +127,16 @@ export const leaveService = {
       },
     });
   },
-}
+
+  getApplicationByEmpId: async (employeeId: number) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(
+      `/api/application/employee/{id}?employeeId=${employeeId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_Token}`,
+        },
+      },
+    );
+  },
+};

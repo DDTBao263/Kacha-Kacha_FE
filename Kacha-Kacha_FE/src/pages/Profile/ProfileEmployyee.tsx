@@ -40,10 +40,27 @@ import { useEffect, useState } from 'react';
 import { employeeService } from '../../services/employee/index';
 import { shiftService } from '../../services/shift';
 import { timeService } from '../../services/time';
+import { leaveService } from '../../services/leave';
 
-interface Params {
-  id: string;
-  idprofileemployee: string;
+// interface Params {
+//   id: string;
+//   idprofileemployee: string;
+// }
+
+interface Application {
+  leaveType: string;
+  startDate: String;
+  endDate: string;
+  description: string;
+  status: string;
+}
+
+interface Schedule {
+  date: string;
+  startTime: string;
+  endTime: string;
+  attendanceStatus: string;
+  shiftName: string;
 }
 
 interface TimekeepingRecord {
@@ -78,11 +95,32 @@ export default function ProfileEmployyee() {
   const [timekeepingHistory, setTimekeepingHistory] = useState<
     TimekeepingRecord[]
   >([]);
+  const [leaveHistory, setLeaveHistory] = useState<Application[]>([]);
+  const [workSchedule, setWorkSchedule] = useState<Schedule[]>([]);
   const [employeeDetail, setEmployeeDetail] = useState<EMPLOYEE | null>(null);
   const [timeAccumulation, setTimeAccumulation] =
     useState<TimeAccumulation | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('timekeeping');
+  // const [calendarData, setCalendarData] = useState([]);
+
+  const fetchLeaveHistory = async (idprofileemployee: number) => {
+    try {
+      const { data } = await leaveService.getApplicationByEmpId(
+        idprofileemployee,
+      );
+      const formattedData = data.data.map((record: any) => ({
+        leaveType: record.leaveType,
+        startDate: record.startDate?.split('T')[0] || 'N/A',
+        endDate: record.endDate?.split('T')[0] || 'N/A',
+        description: record.description,
+        status: record.status,
+      }));
+      setLeaveHistory(formattedData);
+    } catch (error) {
+      console.error('Failed to fetch leave history:', error);
+    }
+  };
 
   const fetchEmployees = async (idprofileemployee: number) => {
     setLoading(true);
@@ -136,7 +174,6 @@ export default function ProfileEmployyee() {
   const fetchTimekeepingHistory = async (idprofileemployee: number) => {
     try {
       const { data } = await shiftService.getTimeKeeping(idprofileemployee);
-      console.log('data', data);
       const formattedData = data
         .filter(
           (record: any) =>
@@ -171,6 +208,25 @@ export default function ProfileEmployyee() {
     }
   };
 
+  const fetchWorkSchedule = async (idprofileemployee: number) => {
+    try {
+      const { data } = await shiftService.getWorkScheduleByEmpId(
+        idprofileemployee,
+      );
+      const formattedData = data.map((record: any) => ({
+        date: record.date?.split('T')[0] || 'N/A',
+        startTime: record.startTime?.split('T')[1]?.substring(0, 8) || 'N/A',
+        endTime: record.endTime?.split('T')[1]?.substring(0, 8) || 'N/A',
+        attendanceStatus: record.attendaceStatus || 'null',
+        shiftName: record.shiftName || 'null',
+      }));
+      console.log('formattedData', formattedData);
+      setWorkSchedule(formattedData);
+    } catch (error) {
+      console.error('Failed to fetch work schedule:', error);
+    }
+  };
+
   useEffect(() => {
     if (idprofileemployee) {
       const profileEmployeeId = parseInt(idprofileemployee, 10);
@@ -182,15 +238,26 @@ export default function ProfileEmployyee() {
   }, [idprofileemployee]);
 
   useEffect(() => {
-    if (activeTab === 'absence' && idprofileemployee) {
-      const profileEmployeeId = parseInt(idprofileemployee, 10);
-      if (!isNaN(profileEmployeeId)) {
-        fetchEmployees(profileEmployeeId);
-      }
-    } else if (activeTab === 'timekeeping' && idprofileemployee) {
+    // if (activeTab === 'absence' && idprofileemployee) {
+    //   const profileEmployeeId = parseInt(idprofileemployee, 10);
+    //   if (!isNaN(profileEmployeeId)) {
+    //     fetchEmployees(profileEmployeeId);
+    //   }
+    // }
+    if (activeTab === 'timekeeping' && idprofileemployee) {
       const profileEmployeeId = parseInt(idprofileemployee, 10);
       if (!isNaN(profileEmployeeId)) {
         fetchTimekeepingHistory(profileEmployeeId);
+      }
+    } else if (activeTab === 'leave' && idprofileemployee) {
+      const profileEmployeeId = parseInt(idprofileemployee, 10);
+      if (!isNaN(profileEmployeeId)) {
+        fetchLeaveHistory(profileEmployeeId);
+      }
+    } else if (activeTab === 'schedule' && idprofileemployee) {
+      const profileEmployeeId = parseInt(idprofileemployee, 10);
+      if (!isNaN(profileEmployeeId)) {
+        fetchWorkSchedule(profileEmployeeId);
       }
     }
   }, [activeTab, idprofileemployee]);
@@ -549,67 +616,34 @@ export default function ProfileEmployyee() {
                       <th className="text-left py-3 px-2 font-medium">Type</th>
                       <th className="text-left py-3 px-2 font-medium">From</th>
                       <th className="text-left py-3 px-2 font-medium">To</th>
-                      <th className="text-left py-3 px-2 font-medium">Days</th>
                       <th className="text-left py-3 px-2 font-medium">
-                        Status
+                        Reason
                       </th>
                       <th className="text-left py-3 px-2 font-medium">
-                        Actions
+                        Status
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      {
-                        type: 'Vacation',
-                        from: 'Apr 10, 2025',
-                        to: 'Apr 15, 2025',
-                        days: 5,
-                        status: 'Pending',
-                      },
-                      {
-                        type: 'Sick Leave',
-                        from: 'Feb 3, 2025',
-                        to: 'Feb 4, 2025',
-                        days: 2,
-                        status: 'Approved',
-                      },
-                      {
-                        type: 'Personal',
-                        from: 'Jan 15, 2025',
-                        to: 'Jan 15, 2025',
-                        days: 1,
-                        status: 'Approved',
-                      },
-                      {
-                        type: 'Vacation',
-                        from: 'Dec 20, 2024',
-                        to: 'Dec 31, 2024',
-                        days: 10,
-                        status: 'Approved',
-                      },
-                    ].map((leave, i) => (
+                    {leaveHistory.slice(0, 5).map((leave, i) => (
                       <tr key={i} className="border-b">
-                        <td className="py-3 px-2">{leave.type}</td>
-                        <td className="py-3 px-2">{leave.from}</td>
-                        <td className="py-3 px-2">{leave.to}</td>
-                        <td className="py-3 px-2">{leave.days}</td>
+                        <td className="py-3 px-2">{leave.leaveType}</td>
+                        <td className="py-3 px-2">{leave.startDate}</td>
+                        <td className="py-3 px-2">{leave.endDate}</td>
+                        <td className="py-3 px-2">{leave.description}</td>
                         <td className="py-3 px-2">
                           <Badge
                             variant="outline"
                             className={
-                              leave.status === 'Approved'
+                              leave.status === 'APPROVED'
                                 ? 'bg-green-50 text-green-700 border-green-200'
-                                : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                : leave.status === 'PENDING'
+                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                : 'bg-red-50 text-red-700 border-red-200'
                             }
                           >
                             {leave.status}
                           </Badge>
-                        </td>
-                        <td className="py-3 px-2">
-                          <Button variant="ghost" size="sm">
-                            Details
-                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -644,156 +678,33 @@ export default function ProfileEmployyee() {
                               To
                             </th>
                             <th className="text-left py-3 px-2 font-medium">
-                              Days
+                              Reason
                             </th>
                             <th className="text-left py-3 px-2 font-medium">
                               Status
                             </th>
-                            <th className="text-left py-3 px-2 font-medium">
-                              Requested On
-                            </th>
-                            <th className="text-left py-3 px-2 font-medium">
-                              Approved By
-                            </th>
-                            <th className="text-left py-3 px-2 font-medium">
-                              Actions
-                            </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {[
-                            {
-                              type: 'Vacation',
-                              from: 'Apr 10, 2025',
-                              to: 'Apr 15, 2025',
-                              days: 5,
-                              status: 'Pending',
-                              requestedOn: 'Mar 1, 2025',
-                              approvedBy: '-',
-                            },
-                            {
-                              type: 'Sick Leave',
-                              from: 'Feb 3, 2025',
-                              to: 'Feb 4, 2025',
-                              days: 2,
-                              status: 'Approved',
-                              requestedOn: 'Feb 2, 2025',
-                              approvedBy: 'Sarah Johnson',
-                            },
-                            {
-                              type: 'Personal',
-                              from: 'Jan 15, 2025',
-                              to: 'Jan 15, 2025',
-                              days: 1,
-                              status: 'Approved',
-                              requestedOn: 'Jan 10, 2025',
-                              approvedBy: 'Sarah Johnson',
-                            },
-                            {
-                              type: 'Vacation',
-                              from: 'Dec 20, 2024',
-                              to: 'Dec 31, 2024',
-                              days: 10,
-                              status: 'Approved',
-                              requestedOn: 'Nov 15, 2024',
-                              approvedBy: 'Sarah Johnson',
-                            },
-                            {
-                              type: 'Sick Leave',
-                              from: 'Oct 5, 2024',
-                              to: 'Oct 6, 2024',
-                              days: 2,
-                              status: 'Approved',
-                              requestedOn: 'Oct 5, 2024',
-                              approvedBy: 'Sarah Johnson',
-                            },
-                            {
-                              type: 'Personal',
-                              from: 'Sep 12, 2024',
-                              to: 'Sep 12, 2024',
-                              days: 1,
-                              status: 'Approved',
-                              requestedOn: 'Sep 5, 2024',
-                              approvedBy: 'Michael Chen',
-                            },
-                            {
-                              type: 'Training',
-                              from: 'Aug 15, 2024',
-                              to: 'Aug 17, 2024',
-                              days: 3,
-                              status: 'Approved',
-                              requestedOn: 'Jul 20, 2024',
-                              approvedBy: 'Sarah Johnson',
-                            },
-                            {
-                              type: 'Vacation',
-                              from: 'Jul 1, 2024',
-                              to: 'Jul 7, 2024',
-                              days: 5,
-                              status: 'Approved',
-                              requestedOn: 'Jun 1, 2024',
-                              approvedBy: 'Sarah Johnson',
-                            },
-                            {
-                              type: 'Personal',
-                              from: 'May 22, 2024',
-                              to: 'May 22, 2024',
-                              days: 1,
-                              status: 'Approved',
-                              requestedOn: 'May 15, 2024',
-                              approvedBy: 'Michael Chen',
-                            },
-                            {
-                              type: 'Sick Leave',
-                              from: 'Apr 10, 2024',
-                              to: 'Apr 11, 2024',
-                              days: 2,
-                              status: 'Approved',
-                              requestedOn: 'Apr 10, 2024',
-                              approvedBy: 'Sarah Johnson',
-                            },
-                            {
-                              type: 'Vacation',
-                              from: 'Mar 5, 2024',
-                              to: 'Mar 10, 2024',
-                              days: 5,
-                              status: 'Approved',
-                              requestedOn: 'Feb 5, 2024',
-                              approvedBy: 'Sarah Johnson',
-                            },
-                            {
-                              type: 'Training',
-                              from: 'Feb 15, 2024',
-                              to: 'Feb 16, 2024',
-                              days: 2,
-                              status: 'Approved',
-                              requestedOn: 'Jan 25, 2024',
-                              approvedBy: 'Michael Chen',
-                            },
-                          ].map((leave, i) => (
+                          {leaveHistory.map((leave, i) => (
                             <tr key={i} className="border-b">
-                              <td className="py-3 px-2">{leave.type}</td>
-                              <td className="py-3 px-2">{leave.from}</td>
-                              <td className="py-3 px-2">{leave.to}</td>
-                              <td className="py-3 px-2">{leave.days}</td>
+                              <td className="py-3 px-2">{leave.leaveType}</td>
+                              <td className="py-3 px-2">{leave.startDate}</td>
+                              <td className="py-3 px-2">{leave.endDate}</td>
+                              <td className="py-3 px-2">{leave.description}</td>
                               <td className="py-3 px-2">
                                 <Badge
                                   variant="outline"
                                   className={
-                                    leave.status === 'Approved'
+                                    leave.status === 'APPROVED'
                                       ? 'bg-green-50 text-green-700 border-green-200'
-                                      : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                      : leave.status === 'PENDING'
+                                      ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                      : 'bg-red-50 text-red-700 border-red-200'
                                   }
                                 >
                                   {leave.status}
                                 </Badge>
-                              </td>
-                              <td className="py-3 px-2">{leave.requestedOn}</td>
-                              <td className="py-3 px-2">{leave.approvedBy}</td>
-                              <td className="py-3 px-2">
-                                <Button variant="ghost" size="sm">
-                                  Details
-                                </Button>
                               </td>
                             </tr>
                           ))}
@@ -802,7 +713,6 @@ export default function ProfileEmployyee() {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <Button size="sm">New Request</Button>
               </div>
             </CardContent>
           </Card>
@@ -819,38 +729,7 @@ export default function ProfileEmployyee() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  {
-                    date: 'Monday, Mar 10, 2025',
-                    shift: 'Regular (9:00 AM - 5:00 PM)',
-                    location: 'Main Office',
-                  },
-                  {
-                    date: 'Tuesday, Mar 11, 2025',
-                    shift: 'Regular (9:00 AM - 5:00 PM)',
-                    location: 'Main Office',
-                  },
-                  {
-                    date: 'Wednesday, Mar 12, 2025',
-                    shift: 'Regular (9:00 AM - 5:00 PM)',
-                    location: 'Main Office',
-                  },
-                  {
-                    date: 'Thursday, Mar 13, 2025',
-                    shift: 'Remote Work',
-                    location: 'Home Office',
-                  },
-                  {
-                    date: 'Friday, Mar 14, 2025',
-                    shift: 'Remote Work',
-                    location: 'Home Office',
-                  },
-                  {
-                    date: 'Monday, Mar 17, 2025',
-                    shift: 'Regular (9:00 AM - 5:00 PM)',
-                    location: 'Main Office',
-                  },
-                ].map((day, i) => (
+                {workSchedule.map((day, i) => (
                   <div
                     key={i}
                     className="flex items-start p-3 border rounded-lg"
@@ -859,29 +738,34 @@ export default function ProfileEmployyee() {
                       <CalendarDays className="h-10 w-10 text-muted-foreground" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium">{day.date}</h4>
+                      <h4 className="font-medium">Date: {day.date}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {day.shift}
+                        {day.startTime} -{day.endTime}
                       </p>
                       <div className="flex items-center mt-1">
-                        <MapPin className="h-3 w-3 mr-1 text-muted-foreground" />
-                        <span className="text-xs">{day.location}</span>
+                        {/* <MapPin className="h-3 w-3 mr-1 text-muted-foreground" /> */}
+                        <span className="text-xs">{day.shiftName}</span>
                       </div>
                     </div>
                     <Badge
-                      variant="outline"
-                      className={
-                        day.location.includes('Home')
-                          ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : 'bg-green-50 text-green-700 border-green-200'
+                      variant={
+                        day.attendanceStatus === 'PRESENT'
+                          ? 'success'
+                          : day.attendanceStatus === 'NO ATTENDANCE'
+                          ? 'destructive'
+                          : day.attendanceStatus === 'LATE'
+                          ? 'warning'
+                          : day.attendanceStatus === 'EARLY'
+                          ? 'warning'
+                          : 'outline'
                       }
                     >
-                      {day.location.includes('Home') ? 'Remote' : 'In Office'}
+                      {day.attendanceStatus}
                     </Badge>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 flex justify-center">
+              {/* <div className="mt-4 flex justify-center">
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -910,13 +794,36 @@ export default function ProfileEmployyee() {
                       </div>
                       <div className="grid grid-cols-7 gap-1">
                         {Array.from({ length: 35 }).map((_, i) => {
-                          const day = i - 2; // Offset to start month on a Monday
-                          const isCurrentMonth = day >= 0 && day < 31;
-                          const isToday = day === 9; // Assuming today is the 10th
-                          const hasEvent = [
-                            10, 11, 12, 13, 14, 17, 18, 19, 20, 21,
-                          ].includes(day);
-                          const isRemoteDay = [13, 14, 20, 21].includes(day);
+                          const currentDate = new Date();
+                          const firstDayOfMonth = new Date(
+                            currentDate.getFullYear(),
+                            currentDate.getMonth(),
+                            1,
+                          );
+                          const startDay = firstDayOfMonth.getDay(); // Day of the week the month starts on
+                          const day = i - startDay + 1; // Calculate the actual day of the month
+                          const isCurrentMonth =
+                            day > 0 &&
+                            day <=
+                              new Date(
+                                currentDate.getFullYear(),
+                                currentDate.getMonth() + 1,
+                                0,
+                              ).getDate();
+                          const isToday =
+                            isCurrentMonth && day === currentDate.getDate();
+
+                          // Find the schedule for the current day
+                          const schedule = workSchedule.find(
+                            (record) =>
+                              record.date ===
+                              `${currentDate.getFullYear()}-${String(
+                                currentDate.getMonth() + 1,
+                              ).padStart(2, '0')}-${String(day).padStart(
+                                2,
+                                '0',
+                              )}`,
+                          );
 
                           return (
                             <div
@@ -930,22 +837,25 @@ export default function ProfileEmployyee() {
                               {isCurrentMonth && (
                                 <>
                                   <div className="text-right text-sm">
-                                    {day + 1}
+                                    {day}
                                   </div>
-                                  {hasEvent && (
+                                  {schedule && (
                                     <div
                                       className={`
-                        mt-1 text-xs p-1 rounded
-                        ${
-                          isRemoteDay
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'bg-green-50 text-green-700'
-                        }
-                      `}
+                          mt-1 text-xs p-1 rounded
+                          ${
+                            schedule.attendanceStatus === 'PRESENT'
+                              ? 'bg-green-50 text-green-700'
+                              : schedule.attendanceStatus === 'NO ATTENDANCE'
+                              ? 'bg-red-50 text-red-700'
+                              : schedule.attendanceStatus === 'LATE'
+                              ? 'bg-yellow-50 text-yellow-700'
+                              : 'bg-blue-50 text-blue-700'
+                          }
+                        `}
                                     >
-                                      {isRemoteDay
-                                        ? 'Remote Work'
-                                        : 'Office (9-5)'}
+                                      {schedule.shiftName} ({schedule.startTime}{' '}
+                                      - {schedule.endTime})
                                     </div>
                                   )}
                                 </>
@@ -957,7 +867,7 @@ export default function ProfileEmployyee() {
                     </div>
                   </DialogContent>
                 </Dialog>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </TabsContent>

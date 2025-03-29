@@ -9,4 +9,13 @@ export const shiftService = {
       },
     });
   },
+
+  getWorkScheduleByEmpId: async (id: number) => {
+    const jwt_Token = localStorage.getItem('jwtToken');
+    return axiosPrivate.get(`/api/shift/two-week/employee/${id}`, {
+      headers: {
+        Authorization: `Bearer ${jwt_Token},`,
+      },
+    });
+  },
 };
