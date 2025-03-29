@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { format, addDays, isBefore, startOfDay } from 'date-fns';
+import { format, addDays, isBefore, startOfDay, isAfter } from 'date-fns';
 import { employeeService } from '../../../services/employee';
 import { scheduleService } from '../../../services/schedule';
 import { userService } from '../../../services/user';
@@ -50,7 +50,7 @@ export function WeeklySchedule({ weekStart, onAddShift }: WeeklyScheduleProps) {
 
   const isDateValid = useCallback((date: Date) => {
     const today = startOfDay(new Date());
-    return !isBefore(date, today);
+    return isAfter(date, today);
   }, []);
 
   const fetchSchedule = useCallback(async (

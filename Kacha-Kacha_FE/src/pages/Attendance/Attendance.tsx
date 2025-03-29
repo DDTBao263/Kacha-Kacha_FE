@@ -120,7 +120,7 @@ const Attendance = () => {
             email: emp.email || '',
             avatar: emp.avatar || ''
           }))
-          console.log('Formatted Employees:', formattedEmployees)
+          // console.log('Formatted Employees:', formattedEmployees)
           setEmployees(formattedEmployees)
 
           // Sau khi lấy được danh sách nhân viên, lấy thông tin ca làm việc của từng nhân viên
@@ -146,33 +146,57 @@ const Attendance = () => {
     const shiftsMap = new Map<number, Shift>();
     const employeesToAttend: Attendance[] = [];
 
-    console.log('Bắt đầu lấy thông tin ca làm việc cho nhân viên');
+    // console.log('Bắt đầu lấy thông tin ca làm việc cho nhân viên');
 
     for (const employee of employeeList) {
       try {
-        console.log(`Đang lấy ca làm việc cho nhân viên ID: ${employee.id}`);
+        // console.log(`Đang lấy ca làm việc cho nhân viên ID: ${employee.id}`);
         const shiftResponse = await attendanceService.getShift(employee.id);
-        console.log(`Kết quả ca làm việc của nhân viên ${employee.id}:`, shiftResponse);
+        // console.log(`Kết quả ca làm việc của nhân viên ${employee.id}:`, shiftResponse);
 
         if (shiftResponse?.data) {
+          // Xử lý và làm sạch dữ liệu ngày tháng
+          const rawDate = shiftResponse.data.date;
+          const cleanDate = typeof rawDate === 'string' ? rawDate.split('T')[0] : new Date().toISOString().split('T')[0];
+
+          const rawStartTime = shiftResponse.data.startTime;
+          const cleanStartTime = typeof rawStartTime === 'string' ?
+            (rawStartTime.includes('T') ? rawStartTime.split('T')[1].substring(0, 5) : rawStartTime) :
+            '08:00';
+
+          const rawEndTime = shiftResponse.data.endTime;
+          const cleanEndTime = typeof rawEndTime === 'string' ?
+            (rawEndTime.includes('T') ? rawEndTime.split('T')[1].substring(0, 5) : rawEndTime) :
+            '17:00';
+
+          // console.log(`Thông tin ca làm đã được làm sạch: date=${cleanDate}, startTime=${cleanStartTime}, endTime=${cleanEndTime}`);
+
           const shiftData = {
             id: shiftResponse.data.shiftId,
-            startTime: shiftResponse.data.startTime,
-            endTime: shiftResponse.data.endTime,
-            date: shiftResponse.data.date
+            startTime: cleanStartTime,
+            endTime: cleanEndTime,
+            date: cleanDate
           };
 
           shiftsMap.set(employee.id, shiftData);
-          console.log(`Đã lưu thông tin ca làm việc cho nhân viên ${employee.id}:`, shiftData);
+          // console.log(`Đã lưu thông tin ca làm việc cho nhân viên ${employee.id}:`, shiftData);
 
           // Tạo dữ liệu điểm danh mặc định cho nhân viên có ca làm việc
+          // Lấy thời gian hiện tại theo UTC
           const now = new Date();
-          const shiftStartTime = new Date(shiftData.date + 'T' + shiftData.startTime);
+          const nowUTC = new Date(now.toISOString());
+          // console.log(`Thời gian hiện tại UTC: ${nowUTC.toISOString()}`);
+
+          // Kiểm tra trạng thái dựa trên thời gian hiện tại và thời gian bắt đầu ca
+          const isBeforeShiftTime = isBeforeShift(nowUTC, cleanDate, cleanStartTime);
+          // console.log(`Kiểm tra nhân viên ${employee.id}: isBeforeShift = ${isBeforeShiftTime}`);
 
           // Xác định trạng thái mặc định
-          let defaultStatus = 'PENDING';
-          if (now < shiftStartTime) {
-            defaultStatus = 'NOT_YET';
+          let defaultStatus = isBeforeShiftTime ? 'NOT_YET' : 'ABSENT';
+          if (isBeforeShiftTime) {
+            console.log(`Nhân viên ${employee.id} chưa tới giờ ca làm -> NOT_YET`);
+          } else {
+            console.log(`Nhân viên ${employee.id} đã qua giờ ca làm và chưa check-in -> ABSENT`);
           }
 
           // Thêm vào danh sách nhân viên cần hiển thị điểm danh
@@ -185,7 +209,7 @@ const Attendance = () => {
             checkOut: null,
             breakTime: 0,
             status: defaultStatus,
-            date: shiftData.date,
+            date: cleanDate,
             note: '',
             shiftId: shiftData.id,
             checkInTime: null,
@@ -218,18 +242,120 @@ const Attendance = () => {
 
   // Hàm chuyển đổi thời gian địa phương sang UTC
   const convertToUTC = (dateStr: string, timeStr: string): Date => {
-    // Tạo date từ chuỗi ngày và giờ
-    const localDate = new Date(`${dateStr}T${timeStr}`);
-    // Trả về đối tượng Date đã được chuyển đổi sang UTC
-    return localDate;
+    try {
+      // Kiểm tra xem đầu vào có đúng định dạng không
+      if (!dateStr || !timeStr) {
+        console.error('Thiếu dữ liệu ngày hoặc giờ:', { dateStr, timeStr });
+        return new Date();
+      }
+
+      // Xử lý dateStr nếu có định dạng ISO
+      const cleanDateStr = dateStr.split('T')[0];
+
+      // Xử lý timeStr nếu có định dạng ISO
+      const cleanTimeStr = timeStr.includes('T') ? timeStr.split('T')[1].substring(0, 5) : timeStr;
+
+      // console.log(`Sau khi làm sạch: date=${cleanDateStr}, time=${cleanTimeStr}`);
+
+      // Tạo date từ chuỗi ngày và giờ theo chuẩn UTC
+      const dateTimeString = `${cleanDateStr}T${cleanTimeStr}:00Z`; // Thêm Z để chỉ định UTC
+      const date = new Date(dateTimeString);
+
+      // console.log(`convertToUTC: input date=${dateStr}, time=${timeStr}, resulting UTC date=${date.toISOString()}`);
+      return date;
+    } catch (error) {
+      console.error('Lỗi khi chuyển đổi thời gian:', error);
+      // Fallback về cách cũ nếu có lỗi
+      try {
+        const dateTimeString = `${dateStr.split('T')[0]}T${timeStr.split('T')[0].substring(0, 5)}:00Z`;
+        const localDate = new Date(dateTimeString);
+        // console.log(`Fallback date UTC: ${localDate.toISOString()}`);
+        return localDate;
+      } catch (e) {
+        console.error('Lỗi fallback:', e);
+        return new Date(); // Trả về thời gian hiện tại nếu tất cả cách chuyển đổi đều thất bại
+      }
+    }
+  };
+
+  // Hàm kiểm tra xem thời gian hiện tại có trước thời gian ca làm hay không
+  const isBeforeShift = (now: Date, shiftDate: string, shiftTime: string): boolean => {
+    try {
+      console.log(`isBeforeShift - input: now=${now.toISOString()}, shiftDate=${shiftDate}, shiftTime=${shiftTime}`);
+
+      // Chuyển thời gian hiện tại sang UTC
+      const nowUTC = new Date(now.toISOString());
+
+      // Làm sạch dữ liệu đầu vào
+      const cleanShiftDate = shiftDate.split('T')[0];
+      const cleanShiftTime = shiftTime.includes('T') ? shiftTime.split('T')[1].substring(0, 5) : shiftTime;
+
+      // Tạo thời gian ca làm việc theo UTC
+      const shiftDateTimeUTC = new Date(`${cleanShiftDate}T${cleanShiftTime}:00Z`);
+
+      console.log(`So sánh thời gian UTC: nowUTC=${nowUTC.toISOString()}, shiftDateTimeUTC=${shiftDateTimeUTC.toISOString()}`);
+
+      // Fix đặc biệt cho trường hợp thời gian hiện tại và ca làm trong cùng một ngày
+      // Lấy phần ngày tháng năm để so sánh
+      const nowDateStr = nowUTC.toISOString().split('T')[0];
+      const shiftDateStr = cleanShiftDate;
+
+      // Nếu ngày khác nhau, tiền xử lý để đảm bảo so sánh chính xác
+      if (nowDateStr !== shiftDateStr) {
+        const nowDate = new Date(nowDateStr + "T00:00:00Z");
+        const shiftDate = new Date(shiftDateStr + "T00:00:00Z");
+
+        // Nếu ngày ca làm nằm trong tương lai, chưa tới giờ
+        if (shiftDate > nowDate) {
+          console.log(`Ngày ca làm (${shiftDateStr}) nằm trong tương lai so với ngày hiện tại (${nowDateStr}) -> NOT_YET`);
+          return true;
+        }
+
+        // Nếu ngày ca làm nằm trong quá khứ, đã qua giờ
+        if (shiftDate < nowDate) {
+          console.log(`Ngày ca làm (${shiftDateStr}) nằm trong quá khứ so với ngày hiện tại (${nowDateStr}) -> ABSENT`);
+          return false;
+        }
+      }
+
+      // So sánh thời gian UTC
+      const result = nowUTC < shiftDateTimeUTC;
+      console.log(`Kết quả so sánh UTC: ${result}`);
+      return result;
+    } catch (error) {
+      console.error('Lỗi khi so sánh thời gian:', error);
+
+      // Fallback đơn giản
+      try {
+        // Tạo thời gian UTC cho ca làm
+        const cleanShiftDate = shiftDate.split('T')[0];
+        const cleanShiftTime = shiftTime.includes('T') ? shiftTime.split('T')[1].substring(0, 5) : shiftTime;
+        const shiftDateTimeUTC = new Date(`${cleanShiftDate}T${cleanShiftTime}:00Z`);
+
+        // Chuyển thời gian hiện tại sang UTC
+        const nowUTC = new Date(now.toISOString());
+
+        const result = nowUTC < shiftDateTimeUTC;
+        console.log(`Fallback so sánh UTC: nowUTC=${nowUTC.toISOString()}, shiftDateTimeUTC=${shiftDateTimeUTC.toISOString()}, result=${result}`);
+        return result;
+      } catch (e) {
+        console.error('Lỗi fallback:', e);
+        return false;
+      }
+    }
   };
 
   // Hàm để format thời gian
   const formatTimeDisplay = (timeStr: string | null): string | null => {
     if (!timeStr) return null;
-    // Lấy thời gian trực tiếp từ chuỗi ISO
-    const time = timeStr.split('T')[1]?.substring(0, 5); // Chỉ lấy HH:mm
-    return time || null;
+    try {
+      // Lấy thời gian trực tiếp từ chuỗi ISO
+      const time = timeStr.split('T')[1]?.substring(0, 5); // Chỉ lấy HH:mm
+      return time || null;
+    } catch (error) {
+      console.error('Lỗi format thời gian:', error);
+      return null;
+    }
   };
 
   const fetchAttendances = useCallback(async (
@@ -244,6 +370,11 @@ const Attendance = () => {
       const response = await attendanceService.getTodayAttendance(restaurantId, page - 1, size);
       console.log('API Response điểm danh:', response);
 
+      // Lấy thời gian hiện tại và hiển thị để debug
+      const currentTime = new Date();
+      const currentTimeUTC = new Date(currentTime.toISOString());
+      console.log(`Thời gian hiện tại UTC: ${currentTimeUTC.toISOString()}`);
+
       let processedAttendances: Attendance[] = [];
 
       if (response.data?.content) {
@@ -251,126 +382,79 @@ const Attendance = () => {
           // Lấy thông tin ca làm việc của nhân viên
           const shift = employeeShifts.get(attendance.employeeId);
 
-          // Xác định trạng thái dựa trên ca làm việc và thời gian điểm danh
-          let status = attendance.status || 'PENDING';
+          // Lấy thời gian check-in, check-out từ dữ liệu
+          const checkInTime = attendance.checkInTime ? new Date(attendance.checkInTime) : null;
+          const checkOutTime = attendance.checkOutTime ? new Date(attendance.checkOutTime) : null;
 
-          if (shift) {
-            const now = new Date();
+          // Xác định trạng thái ban đầu
+          let status = 'NOT_YET'; // Giá trị mặc định
 
-            // Lấy thời gian check-in, check-out từ dữ liệu, đã ở định dạng UTC
-            const checkInTime = attendance.checkInTime ? new Date(attendance.checkInTime) : null;
-            const checkOutTime = attendance.checkOutTime ? new Date(attendance.checkOutTime) : null;
+          // Nếu có check-in và check-out, xác định trạng thái dựa vào đó trước
+          if (checkInTime && checkOutTime) {
+            // Có cả check-in và check-out -> xử lý trạng thái dựa trên thời gian
+            if (shift) {
+              const shiftStartTime = convertToUTC(shift.date, shift.startTime);
+              const shiftEndTime = convertToUTC(shift.date, shift.endTime);
 
-            // Chuyển đổi thời gian ca làm việc sang UTC để so sánh
-            const shiftStartTime = convertToUTC(shift.date, shift.startTime);
-            const shiftEndTime = convertToUTC(shift.date, shift.endTime);
+              // Thêm 15 phút vào thời gian bắt đầu ca để xác định trễ nghiêm trọng
+              const severeLateThreshold = new Date(shiftStartTime);
+              severeLateThreshold.setMinutes(severeLateThreshold.getMinutes() + 15);
 
-            // Thêm 15 phút vào thời gian bắt đầu ca để xác định trễ nghiêm trọng
-            const severeLateThreshold = new Date(shiftStartTime);
-            severeLateThreshold.setMinutes(severeLateThreshold.getMinutes() + 15);
-
-            console.log(`Employee ${attendance.employeeId} - Check-in time: ${checkInTime}, Shift start: ${shiftStartTime}`);
-
-            // Trước ca làm việc
-            if (now < shiftStartTime) {
-              if (!checkInTime) {
-                // Chưa đến ca làm việc và chưa check-in
-                status = 'NOT_YET';
-              } else if (checkInTime < shiftStartTime) {
-                // Đã check-in sớm trước giờ ca làm
-                if (!checkOutTime) {
-                  // Đã check-in sớm và chưa check-out
-                  status = 'IN_WORKING';
-                } else if (checkOutTime < shiftEndTime) {
-                  // Đã check-in sớm và check-out sớm
-                  status = 'EARLY';
+              if (checkInTime > shiftStartTime) {
+                // Check-in trễ
+                if (checkInTime > severeLateThreshold) {
+                  // Trễ nghiêm trọng (> 15 phút)
+                  if (checkOutTime < shiftEndTime) {
+                    status = 'LATE_EARLY'; // Trễ nghiêm trọng và về sớm
+                  } else {
+                    status = 'LATE_SEVERE'; // Trễ nghiêm trọng
+                  }
                 } else {
-                  // Đã check-in sớm và check-out đúng giờ hoặc muộn
-                  status = 'PRESENT';
+                  // Trễ nhưng không nghiêm trọng (< 15 phút)
+                  if (checkOutTime < shiftEndTime) {
+                    status = 'LATE_EARLY'; // Trễ và về sớm
+                  } else {
+                    status = 'LATE'; // Chỉ trễ
+                  }
                 }
-              }
-            }
-            // Trong hoặc sau ca làm việc
-            else {
-              if (!checkInTime) {
-                // Đã đến hoặc qua giờ ca làm nhưng chưa check-in
-                status = 'ABSENT';
               } else {
-                // Kiểm tra thời gian check-in so với thời gian bắt đầu ca
-                const lateMinutes = checkInTime && shiftStartTime ?
-                  Math.floor((checkInTime.getTime() - shiftStartTime.getTime()) / (1000 * 60)) : 0;
-
-                console.log(`Employee ${attendance.employeeId} - Late minutes: ${lateMinutes}`);
-
-                if (checkInTime > shiftStartTime) {
-                  // Check-in trễ
-                  if (checkInTime > severeLateThreshold) {
-                    // Check-in trễ nghiêm trọng (sau thời gian cho phép 15 phút)
-                    if (!checkOutTime) {
-                      // Check-in trễ nghiêm trọng và chưa check-out
-                      status = 'IN_WORKING';
-                    } else if (checkOutTime < shiftEndTime) {
-                      // Check-in trễ nghiêm trọng và check-out sớm
-                      status = 'LATE_EARLY';
-                    } else {
-                      // Check-in trễ nghiêm trọng và check-out đúng giờ hoặc muộn
-                      status = 'LATE_SEVERE';
-                    }
-                  } else {
-                    // Check-in trễ nhưng trong khoảng cho phép (dưới 15 phút)
-                    if (!checkOutTime) {
-                      // Check-in trễ và chưa check-out
-                      status = 'IN_WORKING';
-                    } else if (checkOutTime < shiftEndTime) {
-                      // Check-in trễ và check-out sớm
-                      const earlyMinutes = Math.floor((shiftEndTime.getTime() - checkOutTime.getTime()) / (1000 * 60));
-                      console.log(`Late CheckIn - CheckOut time: ${checkOutTime}, ShiftEnd time: ${shiftEndTime}, Early minutes: ${earlyMinutes}`);
-
-                      if (earlyMinutes >= 1) {
-                        status = 'LATE_EARLY';
-                      } else {
-                        status = 'LATE';
-                      }
-                    } else {
-                      // Check-in trễ và check-out đúng giờ hoặc muộn
-                      status = 'LATE';
-                    }
-                  }
+                // Check-in đúng giờ hoặc sớm
+                if (checkOutTime < shiftEndTime) {
+                  status = 'EARLY'; // Về sớm
                 } else {
-                  // Check-in đúng giờ hoặc trong khoảng thời gian cho phép
-                  if (!checkOutTime) {
-                    // Check-in đúng giờ và chưa check-out
-                    status = 'IN_WORKING';
-                  } else if (checkOutTime < shiftEndTime) {
-                    // Kiểm tra chính xác hơn: check-out sớm (dù chỉ 1 phút)
-                    // Tính chênh lệch thời gian theo phút
-                    const earlyMinutes = Math.floor((shiftEndTime.getTime() - checkOutTime.getTime()) / (1000 * 60));
-                    console.log(`CheckOut time: ${checkOutTime}, ShiftEnd time: ${shiftEndTime}, Early minutes: ${earlyMinutes}`);
-
-                    // Nếu chênh lệch từ 1 phút trở lên, đánh dấu là EARLY
-                    if (earlyMinutes >= 1) {
-                      status = 'EARLY';
-                    } else {
-                      // Nếu chênh lệch ít hơn 1 phút, coi như đúng giờ
-                      status = 'PRESENT';
-                    }
-                  } else if (checkOutTime > shiftEndTime) {
-                    // Kiểm tra overtime - check-out sau giờ kết thúc ca
-                    const overtimeMinutes = Math.floor((checkOutTime.getTime() - shiftEndTime.getTime()) / (1000 * 60));
-                    if (overtimeMinutes > 30) {
-                      status = 'OVERTIME';
-                    } else {
-                      status = 'PRESENT';
-                    }
-                  } else {
-                    // Check-in đúng giờ và check-out đúng giờ (chính xác đến giây)
-                    status = 'PRESENT';
-                  }
+                  status = 'PRESENT'; // Đúng giờ
                 }
               }
+            } else {
+              status = 'PRESENT'; // Không có thông tin ca làm, mặc định là PRESENT
+            }
+          }
+          // Nếu chỉ có check-in mà không có check-out
+          else if (checkInTime && !checkOutTime) {
+            status = 'IN_WORKING';
+            console.log(`Nhân viên ${attendance.employeeId} - Đã check-in và chưa check-out -> IN_WORKING`);
+          }
+          // Nếu không có check-in, kiểm tra dựa vào thời gian ca làm
+          else if (shift) {
+            const now = new Date();
+            const nowUTC = new Date(now.toISOString());
+            const shiftStartTime = convertToUTC(shift.date, shift.startTime);
+
+            if (!isBeforeShift(nowUTC, shift.date, shift.startTime)) {
+              status = 'ABSENT'; // Đã đến hoặc qua giờ ca làm nhưng chưa check-in
+              console.log(`Nhân viên ${attendance.employeeId} - Đã đến hoặc qua giờ ca làm nhưng chưa check-in -> ABSENT`);
+            } else {
+              status = 'NOT_YET'; // Chưa đến giờ ca làm
+              console.log(`Nhân viên ${attendance.employeeId} - Chưa tới giờ ca làm -> NOT_YET`);
             }
           }
 
+          // Ghi đè trạng thái nếu có từ API và không có check-in/check-out
+          if (attendance.status && !checkInTime) {
+            status = attendance.status;
+          }
+
+          // Xác định thông tin ca làm và định dạng ngày tháng
           const shiftId = attendance.shiftId || (shift ? shift.id : 3001);
 
           // Lấy ngày từ thời gian check-in (nếu có) hoặc từ trường date
@@ -408,15 +492,20 @@ const Attendance = () => {
               const employee = employees.find(e => e.id === employeeId);
               if (employee) {
                 const now = new Date();
+                const nowUTC = new Date(now.toISOString());
                 // Chuyển đổi thời gian ca làm việc sang UTC để so sánh
                 const shiftStartTime = convertToUTC(shift.date, shift.startTime);
 
+                // console.log(`Nhân viên ${employeeId} không có trong danh sách điểm danh - kiểm tra trạng thái mặc định`);
+                // console.log(`Thời gian hiện tại UTC: ${nowUTC.toISOString()}, thời gian bắt đầu ca: ${shiftStartTime.toISOString()}`);
+                // console.log(`Kết quả kiểm tra isBeforeShift: ${isBeforeShift(nowUTC, shift.date, shift.startTime)}`);
+
                 // Xác định trạng thái mặc định
-                let defaultStatus = 'PENDING';
-                if (now < shiftStartTime) {
-                  defaultStatus = 'NOT_YET';
+                let defaultStatus = isBeforeShift(nowUTC, shift.date, shift.startTime) ? 'NOT_YET' : 'ABSENT';
+                if (isBeforeShift(nowUTC, shift.date, shift.startTime)) {
+                  console.log(`Nhân viên ${employeeId} chưa tới giờ ca làm -> NOT_YET (date=${shift.date}, startTime=${shift.startTime})`);
                 } else {
-                  defaultStatus = 'ABSENT';
+                  console.log(`Nhân viên ${employeeId} đã qua giờ ca làm nhưng chưa check-in -> ABSENT (date=${shift.date}, startTime=${shift.startTime})`);
                 }
 
                 processedAttendances.push({
@@ -451,15 +540,20 @@ const Attendance = () => {
           const employee = employees.find(e => e.id === employeeId);
           if (employee) {
             const now = new Date();
+            const nowUTC = new Date(now.toISOString());
             // Chuyển đổi thời gian ca làm việc sang UTC để so sánh
             const shiftStartTime = convertToUTC(shift.date, shift.startTime);
 
+            // Sửa: In ra console để debug
+            console.log(`Default attendance for employee ${employeeId}: current time UTC ${nowUTC.toISOString()}, shift starts at ${shiftStartTime.toISOString()}`);
+            console.log(`Kết quả kiểm tra isBeforeShift: ${isBeforeShift(nowUTC, shift.date, shift.startTime)}`);
+
             // Xác định trạng thái mặc định
-            let defaultStatus = 'PENDING';
-            if (now < shiftStartTime) {
-              defaultStatus = 'NOT_YET';
+            let defaultStatus = isBeforeShift(nowUTC, shift.date, shift.startTime) ? 'NOT_YET' : 'ABSENT';
+            if (isBeforeShift(nowUTC, shift.date, shift.startTime)) {
+              console.log(`Nhân viên ${employeeId} chưa tới giờ ca làm -> NOT_YET (date=${shift.date}, startTime=${shift.startTime})`);
             } else {
-              defaultStatus = 'ABSENT';
+              console.log(`Nhân viên ${employeeId} đã qua giờ ca làm nhưng chưa check-in -> ABSENT (date=${shift.date}, startTime=${shift.startTime})`);
             }
 
             defaultAttendances.push({
@@ -558,6 +652,8 @@ const Attendance = () => {
         return 'warning';
       case 'LATE_SEVERE':
         return 'destructive';
+      case 'LATE_EARLY':
+        return 'destructive'; // Trễ và về sớm - nghiêm trọng hơn
       case 'EARLY':
         return 'warning';
       case 'NOT_YET':
