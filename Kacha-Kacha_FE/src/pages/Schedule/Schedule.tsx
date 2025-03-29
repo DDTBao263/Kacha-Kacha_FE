@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { addDays, format, startOfWeek, isBefore, startOfDay } from 'date-fns';
+import { addDays, format, startOfWeek, isBefore, startOfDay, isAfter } from 'date-fns';
 import { Calendar, Clock, Users } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
@@ -31,7 +31,7 @@ export default function Schedule() {
 
   const isDateValid = useCallback((date: Date) => {
     const today = startOfDay(new Date());
-    return !isBefore(date, today);
+    return isAfter(date, today);
   }, []);
 
   const handlePreviousWeek = useCallback(() => {

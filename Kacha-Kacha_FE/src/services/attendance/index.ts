@@ -52,7 +52,7 @@ export const attendanceService = {
     editTodayAttend: (id: number, attendance: AttendancePayload) => {
         const jwt_Token = localStorage.getItem('jwtToken');
         return axiosPrivate.put(
-            `/api/attendance/today/${id}`,
+            `/api/attendance/${id}`,
             attendance,
             {
                 headers: {
